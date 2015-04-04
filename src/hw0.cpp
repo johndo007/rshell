@@ -40,6 +40,18 @@ void list_cmd(string& cmds, queue<string>&str_cmd)	//converts string into indivi
 	*/	
 }
 
+void exec_cmd(queue<string> &str_cmd)
+{
+	//begin executing commands
+	while(!str_cmd.empty())
+	{
+		//str_cmd.front();				//execute the first command in queue
+		str_cmd.pop();					//remove command after execution
+	}
+	//need to handle exit here
+	
+}
+
 int main(int argc, char *argv[])
 {
     bool bloop = true;
@@ -62,18 +74,19 @@ int main(int argc, char *argv[])
 		string commands;		
 		getline(cin, commands);					//user input commands
 		
-
-		///if exit is entered
+   		/*
+		// exit case handled to early ~ handled by 'void exec_cmd()'
 		if (commands.find("exit") != std::string::npos) 
 		{
 			exit(0);							//exit if prompted by user
 		}
-		
+		*/
+
 		/// break up commands
 		list_cmd(commands,cmd);						//function handles user input into cmds
 		
 		/// execute commands
-
+		exec_cmd(cmd);
 	}
 
   return 0;
