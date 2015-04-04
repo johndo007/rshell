@@ -4,16 +4,39 @@
 //#include<sys/wait.h>
 #include<cstdlib>
 #include<cstdio>
+#include<queue>
 using namespace std;
 
 void list_cmd(string& cmds)	//converts string into individal commands
 {
+	///convert to string to cmds
 	
-	///check for connectors {|| or && or ;}
-	//convert to string to char
-	char buff[1028];
+	queue<string>str_cmd;	//temporary command buffer
+	string temp_cmd = "";	//temporary command
+	unsigned int str_len = cmds.size();	//string size	
 	
+	for(int j=0;j<str_len;j++)
+	{
+		temp_cmd += cmds[j];
+		///check for connectors {|| or && or ;}	
+		if(cmds[j]==';')
+		{
+			str_cmd.push(temp_cmd);
+			temp_cmd="";
+			if(cmds[j++]==' ') j++;
+		}
+		if(j==(str_len-1)) str_cmd.push(temp_cmd);	
+	}
 	
+	/*	
+	cout<<"Test multiple cmd line"<<endl; 
+	while(!str_cmd.empty())
+	{
+		cout<<str_cmd.front()<<endl;
+		str_cmd.pop();
+	}
+	
+	*/	
 }
 
 int main(int argc, char *argv[])
@@ -44,7 +67,7 @@ int main(int argc, char *argv[])
 		
 		
 		///testing user input
-		cout<<commands<<endl;
+        	//cout<<commands<<endl;
 		
 		/// break up commands
 		list_cmd(commands);
