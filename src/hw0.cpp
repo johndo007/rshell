@@ -1,17 +1,31 @@
 #include<iostream>
 #include<unistd.h>
-//#include<sys/type.h>
-//#include<sys/wait.h>
+#include<sys/types.h>
+#include<sys/wait.h>
 #include<cstdlib>
 #include<cstdio>
 #include<queue>
 using namespace std;
 
+void prompt()
+{
+	if (getlogin() != NULL) 				//only runs if there is a login 
+	{	
+		cout << getlogin() << "@";			//display login and @
+	}
+	char hostname[127] = {0};	        	//max bytes is 128 in hostname
+	if (gethostname(hostname, 255) != -1)   //if there is a hostname
+	{
+		gethostname(hostname, 255);			//put hostname -> hostname
+		cout << hostname << " ";			//cout host name
+	}
+	cout << "$" << " ";						//prompt $
+}
+
 void list_cmd(string& cmds, queue<string>&str_cmd)	//converts string into individal commands
 {
 	///convert to string to cmds
 	
-	//queue<string>str_cmd;	//temporary command buffer
 	string temp_cmd = "";	//temporary command
 	unsigned int str_len = cmds.size();	//string size	
 	
@@ -27,17 +41,6 @@ void list_cmd(string& cmds, queue<string>&str_cmd)	//converts string into indivi
 		}
 		if(j==(str_len-1)) str_cmd.push(temp_cmd);	
 	}
-	
-	/*
-	//test if cmds got pushed onto a queue
-	cout<<"Test multiple cmd line"<<endl; 
-	while(!str_cmd.empty())
-	{
-		cout<<str_cmd.front()<<endl;
-		str_cmd.pop();
-	}
-	
-	*/	
 }
 
 void exec_cmd(queue<string> &str_cmd)
@@ -45,49 +48,94 @@ void exec_cmd(queue<string> &str_cmd)
 	//begin executing commands
 	while(!str_cmd.empty())
 	{
-		//str_cmd.front();				//execute the first command in queue
+		string run_cmd = str_cmd.front();				//execute the first command in queue
+		
+		const int finalWordCount = totalWordCount+1;
+
+		char **list = new char*[finalWordCount];
+		int count = 0;
+		
+		for(int i = 0; i < totalWordCount; i++)
+		{	
+			if((words[i] == ";") || words[i] == "||" || (words[i] == "&&"))
+			{
+				// execute the command
+				pid_t pid;
+				int status = 0;
+				pid = fork();
+				if(pid <= -1) // something went wrong
+				{
+					perror("ERROR [FORK]: CHILD FAILED\n");
+					exit(1); // quit the program
+				}
+				else if(pid == 0) // child process
+				{
+					list[count] = NULL;
+					int success = execvp(list[0], list);
+					if(success <= -1) // nope, it failed
+					{
+						perror("ERROR: EXECUTING THE CMD FAILED\n");
+						exit(1); // dip
+					}
+					else 
+					{ 
+						cout << "It succeeded..." << success << endl; 
+					}
+				}
+				else // parent process---wait until the child is done
+				{
+					waitpid(-1, &status, 0);
+					//cout << "THE STATUS: " << status << endl;
+					if(words[i] == "&&" && (status > 0)) break;
+					if(words[i] == "||" && (status <= 0))break;
+				}
+				// reset the list
+				for(int j = 0; j < count; j++) 
+				{
+					list[j] = NULL;
+				}
+				count = 0;
+			}
+			else 
+			{
+				if(count == 0 && words[i] == "exit")
+				{
+					exit(1);
+				}
+				list[count] = new char[words[i].size()+1];
+				copy(words[i].begin(), words[i].end(), list[count]);
+				list[count][words[i].size()] = '\0';
+				count++;
+			}
+		}
+
+		totalWordCount = 0;
+	
+
 		str_cmd.pop();					//remove command after execution
 	}
-	//need to handle exit here
 	
 }
 
 int main(int argc, char *argv[])
 {
+	
     bool bloop = true;
 	queue<string>cmd;
 	while (bloop == true)						//keep asking user for commands
 	{
-		///Setup user prompt
-		if (getlogin() != NULL) 				//only runs if there is a login 
-		{	
-			cout << getlogin() << "@";			//display login and @
-		}
-		char hostname[255] = {0};	        	//max bytes is 255 in hostname
-		if (gethostname(hostname, 255) != -1)   //if there is a hostname
-		{
-			gethostname(hostname, 255);			//put hostname -> hostname
-			cout << hostname << " ";			//cout host name
-		}
-		cout << "$" << " ";						//prompt $
-
+		prompt();								//Setup user prompt
+		
 		string commands;		
 		getline(cin, commands);					//user input commands
-		
-   		/*
-		// exit case handled to early ~ handled by 'void exec_cmd()'
-		if (commands.find("exit") != std::string::npos) 
-		{
-			exit(0);							//exit if prompted by user
-		}
-		*/
 
 		/// break up commands
-		list_cmd(commands,cmd);						//function handles user input into cmds
+		list_cmd(commands,cmd);					//function handles user input into cmds
 		
 		/// execute commands
 		exec_cmd(cmd);
 	}
 
   return 0;
+  
 }
