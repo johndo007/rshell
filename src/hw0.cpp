@@ -48,69 +48,25 @@ void exec_cmd(queue<string> &str_cmd)
 	//begin executing commands
 	while(!str_cmd.empty())
 	{
-		string run_cmd = str_cmd.front();				//execute the first command in queue
-		
-		const int finalWordCount = totalWordCount+1;
+		string curr_cmd = str_cmd.front();
 
-		char **list = new char*[finalWordCount];
-		int count = 0;
-		
-		for(int i = 0; i < totalWordCount; i++)
-		{	
-			if((words[i] == ";") || words[i] == "||" || (words[i] == "&&"))
-			{
-				// execute the command
-				pid_t pid;
-				int status = 0;
-				pid = fork();
-				if(pid <= -1) // something went wrong
-				{
-					perror("ERROR [FORK]: CHILD FAILED\n");
-					exit(1); // quit the program
-				}
-				else if(pid == 0) // child process
-				{
-					list[count] = NULL;
-					int success = execvp(list[0], list);
-					if(success <= -1) // nope, it failed
-					{
-						perror("ERROR: EXECUTING THE CMD FAILED\n");
-						exit(1); // dip
-					}
-					else 
-					{ 
-						cout << "It succeeded..." << success << endl; 
-					}
-				}
-				else // parent process---wait until the child is done
-				{
-					waitpid(-1, &status, 0);
-					//cout << "THE STATUS: " << status << endl;
-					if(words[i] == "&&" && (status > 0)) break;
-					if(words[i] == "||" && (status <= 0))break;
-				}
-				// reset the list
-				for(int j = 0; j < count; j++) 
-				{
-					list[j] = NULL;
-				}
-				count = 0;
-			}
-			else 
-			{
-				if(count == 0 && words[i] == "exit")
-				{
-					exit(1);
-				}
-				list[count] = new char[words[i].size()+1];
-				copy(words[i].begin(), words[i].end(), list[count]);
-				list[count][words[i].size()] = '\0';
-				count++;
-			}
+		int pid = fork();
+		if(pid == -1)	//error value is -1
+		{
+			perror("fork ");
+			exit(1);
 		}
-
-		totalWordCount = 0;
-	
+		else if(pid == 0)
+		{
+			//cout<<"This is the child process ";
+			if(execvp("ls",argv) == -1)
+			{
+				perror("Command failed to run ");
+				exit(1);
+			}
+			
+			exit(0);
+		}
 
 		str_cmd.pop();					//remove command after execution
 	}
@@ -120,13 +76,13 @@ void exec_cmd(queue<string> &str_cmd)
 int main(int argc, char *argv[])
 {
 	
-    bool bloop = true;
 	queue<string>cmd;
-	while (bloop == true)						//keep asking user for commands
+	string commands;
+
+	while (true)								//keep asking user for commands
 	{
 		prompt();								//Setup user prompt
-		
-		string commands;		
+				
 		getline(cin, commands);					//user input commands
 
 		/// break up commands
