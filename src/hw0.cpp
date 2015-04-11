@@ -46,8 +46,10 @@ void list_cmd(string& cmds, queue<string>&str_cmd)	//converts string into indivi
 void exec_cmd(queue<string> &str_cmd)
 {
 	//begin executing commands
+	int cmdnum =0;
 	while(!str_cmd.empty())
 	{
+		cout<<cmdnum<<endl;
 		string curr_cmd = str_cmd.front();
 
 		int pid = fork();
@@ -58,17 +60,18 @@ void exec_cmd(queue<string> &str_cmd)
 		}
 		else if(pid == 0)
 		{
-			//cout<<"This is the child process ";
-			if(execvp("ls",argv) == -1)
-			{
-				perror("Command failed to run ");
-				exit(1);
-			}
+			cout<<"This is the child process ";
+			//if(execvp("ls",argv) == -1)
+			//{
+			//	perror("Command failed to run ");
+			//	exit(1);
+			//}
 			
 			exit(0);
 		}
 
 		str_cmd.pop();					//remove command after execution
+		cmdnum++;
 	}
 	
 }
