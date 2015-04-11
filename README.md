@@ -8,5 +8,5 @@ rshell is a student made program that is meant to behave like a terminal. It is 
 
 ##Bugs
 
--commands input has problems with no spaces after ';'
+-commands input has problems with no spaces after ';'  
 -child does end properly before the next user/host prompt is displayed
