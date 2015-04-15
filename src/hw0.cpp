@@ -99,8 +99,67 @@ void list_cmd(string& input, vector<string>&words) //converts string into indivi
 
 void exec_cmd(vector<string>&words)
 {
-        //Being reworked as of 1.09 update
-        cout<<"Sorry execvp is unavailable for user usage"<<endl;
+       const int finalWordCount = totalWordCount+1;
+
+        char **list = new char*[finalWordCount];
+        int count = 0;
+        
+        for(int i = 0; i < totalWordCount; i++)
+        {
+        //cout << "TWC " << totalWordCount << "..i=" << i << endl;
+        if((words[i] == ";") || words[i] == "||" || (words[i] == "&&"))
+        {
+        // execute the command
+            pid_t pid;
+            int status = 0;
+            pid = fork();
+            if(pid <= -1) // something went wrong
+            {
+            	perror("ERROR [FORK]: CHILD FAILED\n");
+            	exit(1); // quit the program
+            }
+            else if(pid == 0) // child process
+            {
+                list[count] = NULL;
+            	int success = execvp(list[0], list);
+        	 if(success <= -1) // nope, it failed
+            	{
+            		perror("ERROR: EXECUTING THE CMD FAILED\n");
+            		exit(1); // dip
+        	 }
+            	else 
+            	{ 
+            		cout << "It succeeded..." << success << endl; 
+            	}
+	    }
+            else // parent process---wait until the child is done
+            {
+            	waitpid(-1, &status, 0);
+            
+            	if(words[i] == "&&" && (status > 0)) break;
+            	if(words[i] == "||" && (status <= 0))break;
+            }
+            // reset the list
+            for(int j = 0; j < count; j++) {
+            list[j] = NULL;
+            }
+            count = 0;
+            }
+            else {
+            //cout << "Adding word" << endl;
+            if(count == 0 && words[i] == "exit")
+                {
+                    exit(1);
+                }
+            list[count] = new char[words[i].size()+1];
+            copy(words[i].begin(), words[i].end(), list[count]);
+            list[count][words[i].size()] = '\0';
+            //cout << "..." << list[count] << endl;
+            count++;
+            }
+        }
+
+        totalWordCount = 0;
 }
 
 int main(int argc, char** argv)
