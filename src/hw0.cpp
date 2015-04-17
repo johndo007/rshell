@@ -3,17 +3,12 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <vector>
-//#include <queue>
 #include <string>
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
 
 using namespace std;
-
-//bool printErrors = false;
-
-int totalWordCount = 0;
 
 void prompt()
 {
@@ -32,14 +27,14 @@ void prompt()
     cout << "$" << " "; //prompt $
 }
 
-void list_cmd(string& input, vector<string>&words) //converts string into individal commands
+void list_cmd(string& input, vector<string>&words,int& totalWordCount) //converts string into individal commands
 {
     vector<string> v; 
 	int cnt = 0, wordCnt = 0; 
 	string word; 
 	for(string::iterator it=input.begin(); it != input.end(); it++)
 	{
-		if(input.at(cnt) == '#')
+		if(input.at(cnt) == '#') //case 0 - #
 		{
 			if(word != " " && !word.empty())
 			{
@@ -57,12 +52,6 @@ void list_cmd(string& input, vector<string>&words) //converts string into indivi
 			    word = "";
 			    totalWordCount++;
 		    }
-		    /*
-			else 
-            { 
-                cout<<"Hello World"<<endl; 
-            }
-			*/
 	    }
 	    else if(input.at(cnt) == ';') //case2 - semicolon
         {
@@ -74,7 +63,7 @@ void list_cmd(string& input, vector<string>&words) //converts string into indivi
             v.push_back(";"); 
             word = ""; // reset word
         }
-        else
+        else	//continue inputing characters to string
 		{
             word += input.at(wordCnt);
     	}
@@ -82,7 +71,7 @@ void list_cmd(string& input, vector<string>&words) //converts string into indivi
 		cnt++;
 	}
 	
-	if(word != "" && word != " ")
+	if(word != "" && word != " ")	//end of the cmd string
 	{
 		v.push_back(word);
 		if(word != ";")
@@ -97,15 +86,15 @@ void list_cmd(string& input, vector<string>&words) //converts string into indivi
         v.push_back(";"); 
     }
 	totalWordCount = v.size();
-	words = v;
+	words = v;	//update vector with contents of v by reference
     
 }
 
-void exec_cmd(vector<string>&words)
+void exec_cmd(vector<string>&words,int& totalWordCount)
 {
-       const int finalWordCount = totalWordCount+1;
+        const int finalWordCount = totalWordCount+1;
 
-        char **list = new char*[finalWordCount];
+        char **cmdlist = new char*[finalWordCount];
         int count = 0;
         
         for(int i = 0; i < totalWordCount; i++)
@@ -113,7 +102,8 @@ void exec_cmd(vector<string>&words)
 			if((words[i] == ";") || words[i] == "||" || (words[i] == "&&"))
 			{
 			 // execute the command
-				pid_t pid;
+				//pid_t pid;
+				int pid = 0;
 				int status = 0;
 				pid = fork();
 				if(pid <= -1) // something went wrong
@@ -123,42 +113,39 @@ void exec_cmd(vector<string>&words)
 				}
 				else if(pid == 0) // child process
 				{
-					 list[count] = NULL;
-					int success = execvp(list[0], list);
-				if(success <= -1) // nope, it failed
-            	{
-            		perror("ERROR: EXECUTING THE CMD FAILED\n");
-            		exit(1); // dip
+					 cmdlist[count] = NULL;
+					int success = execvp(cmdlist[0], cmdlist);
+					if(success <= -1) // nope, it failed
+					{
+						perror("ERROR: EXECUTING THE CMD FAILED\n");
+						exit(1);
+					}
 				}
-            	else 
-            	{ 
-            		cout << "It succeeded..." << success << endl; 
-            	}
-			 }
-            else // parent process---wait until the child is done
-            {
-            	waitpid(-1, &status, 0);
+				else // parent process---wait until the child is done
+				{
+					waitpid(-1, &status, 0);
             
-            	if(words[i] == "&&" && (status > 0)) break;
-            	if(words[i] == "||" && (status <= 0))break;
+					if(words[i] == "&&" && (status > 0)) break;
+					if(words[i] == "||" && (status <= 0))break;
+				}
+				 // reset the list
+				 for(int j = 0; j < count; j++)
+				 {
+					cmdlist[j] = NULL;
+				 }
+				 count = 0;
             }
-            // reset the list
-            for(int j = 0; j < count; j++)
+            else 
 			{
-				list[j] = NULL;
-            }
-            count = 0;
-            }
-            else {
-            //cout << "Adding word" << endl;
-            if(count == 0 && words[i] == "exit")
-            {
-				exit(1);
-            }
-            list[count] = new char[words[i].size()+1];
-            copy(words[i].begin(), words[i].end(), list[count]);
-            list[count][words[i].size()] = '\0';
-            count++;
+            
+				if(count == 0 && words[i] == "exit")
+				{
+					exit(1);
+				}
+				cmdlist[count] = new char[words[i].size()+1];
+				copy(words[i].begin(), words[i].end(), cmdlist[count]);
+				cmdlist[count][words[i].size()] = '\0';
+				count++;
             }
         }
 
@@ -167,9 +154,10 @@ void exec_cmd(vector<string>&words)
 
 int main(int argc, char** argv)
 {
-	string input;
-    vector<string>words;
-	
+	string input;	//get user cmd in one line
+    vector<string>words;	//seperate the user input into vector of strings
+	int wordcnt = 0;	//word counter to keep track of postion
+
 	while(true)
 	{
         prompt(); //Setup user prompt
@@ -177,10 +165,10 @@ int main(int argc, char** argv)
 		getline (cin, input);		
 		       
         ///break up commands
-        list_cmd(input, words);
+        list_cmd(input, words,wordcnt);
 
         ///execute commands        
-        exec_cmd(words);
+        exec_cmd(words,wordcnt);
 	}
 	return 0;
 }
