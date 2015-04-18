@@ -7,3 +7,5 @@ run: rshell
 		(cd bin && ./rshell)
 clean:
 	    rm -rf bin
+edit: 
+		(cd src && vim hw0.cpp)
