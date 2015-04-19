@@ -159,94 +159,114 @@ void list_cmd(string& input, vector<string>&words,int& totalWordCount) //convert
 void exec_cmd(vector<string>&words,int& totalWordCount)
 {
         const int finalWordCount = totalWordCount+1;
-        /*for(int i=0;i<finalWordCount-1;i++)
+        /*
+		for(int i=0;i<finalWordCount-1;i++)
         cout<<"Argv="<<i<<":"<<words[i]<<endl;
-        return;
-		*/
+		return;
+		*/	
 		
         char **cmdlist = new char*[finalWordCount];
         int count = 0;
         int index_then=-1;
         int index_else=-1;
-        int cmd_start=0;
-        for(int i = 0; i < totalWordCount; i++)
-        {
-			if(words[i]=="&&")index_then=i+1;
-			if(words[i]=="||")index_else=i+1;
-		}
+        //int cmd_start=0;
+        //for(int i = 0; i < totalWordCount; i++)
+        //{
+			//if(words[i]=="&&")index_then=i+1;
+			//if(words[i]=="||")index_else=i+1;
+		//}
         for(int i = 0; i < totalWordCount; i++)
         {
 			if((words[i] == ";") || words[i] == "||" || (words[i] == "&&"))
 			{
 				
-			 // execute the command
-				//pid_t pid;
+				//execute the command
+				
 				int pid = 0;
 				int status = 0;
 				pid = fork();
 				if(pid <= -1) // something went wrong
 				{
 					perror("ERROR [FORK]: CHILD FAILED\n");
+					for(int j =0;j<count;j++)
+					{
+						delete cmdlist[j];
+					}
+					delete cmdlist;
 					exit(1); // quit the program
 				}
-				else if(pid == 0) // child process
+				else if(pid == 0) //starting  child process
 				{
-					 cmdlist[count] = NULL;
+					cmdlist[count] = NULL;
 					int success;
 					if(pid==0)
-					success = execvp(cmdlist[cmd_start], &cmdlist[cmd_start]);
-					if(success <= -1 ) // nope, it failed
+					
+					success = execvp(cmdlist[0], &cmdlist[0]);
+					if(success <= -1 ) // nope, it failed ... failed on command
 					{
 						
-						//perror("ERROR: EXECUTING THE CMD FAILED\n");
+						perror("ERROR: EXECUTING THE CMD FAILED\n");
 						//exit(1);
-						int x=i;
-						for(int x = 0; x < totalWordCount; x++)
-						{
-							
-							if(words[i]=="||")index_else=x+1;
+						int x;
+						index_else =-1;
+						if(words[i]== "&&")
+						//start copying here
+							x = i+1;	//skip && and look for next avaiable connector
+						else
+							x = i;	//look for next possible connector
+						for( ; x < totalWordCount; x++)
+						{						
+							if(words[i]=="||"||words[i]=="&&"||words[i]==";")
+							{
+								index_else = x;
+								break;
+							}
 						}
 						if(index_else>0)
 						{
-							cout<<"Loading cmd1..."<<endl;
-							cmd_start=index_else;
 							i=index_else;
-							index_else=-1;
-							cmdlist[count] = new char[words[i].size()+1];
-							copy(words[i].begin(), words[i].end(), cmdlist[count]);
-							cmdlist[count][words[i].size()] = '\0';
-							count++;
-							i++;
-							cmdlist[count] = new char[words[i].size()+1];
-							copy(words[i].begin(), words[i].end(), cmdlist[count]);
-							cmdlist[count][words[i].size()] = '\0';
-							count++;
-							cmdlist[count] = NULL;
-							pid=fork();
-							if(pid==0)
-							success = execvp(cmdlist[cmd_start], &cmdlist[cmd_start]);
-							
-							
-							
-						}
-						else
-						{
-							perror("ERROR: EXECUTING THE CMD FAILED\n");
-							return ;
+							index_else =-1;	
 						}
 						
 					}
+
+					for(int j = 0; j < count; j++)
+					{
+						delete cmdlist[j];
+						cmdlist[j] = NULL;
+					}
+
+					exit(success);
 				}
-				else // parent process---wait until the child is done
+
+				else // parent process---wait until the child is done 
 				{
 					waitpid(-1, &status, 0);
             
-					if(words[i] == "&&" && (status > 0)) break;
-					if(words[i] == "||" && (status <= 0))break;
+					if(words[i] == "&&" && (status > 0))	//failed on prameter 
+					{
+						int x;
+						index_else = -1;
+						x = i+1;
+						for(;x<totalWordCount; x++)
+						{
+							if(words[i]== "&&"||words[i]=="||"||words[i]==";")
+							{
+								index_else = x;
+								break;
+							}
+						}
+						if(index_else>0)
+						{
+							i = index_else;
+							index_else = -1;
+						}
+					}
 				}
 				 // reset the list
 				 for(int j = 0; j < count; j++)
 				 {
+				 	delete cmdlist[j];
 					cmdlist[j] = NULL;
 				 }
 				 count = 0;
@@ -256,6 +276,11 @@ void exec_cmd(vector<string>&words,int& totalWordCount)
             
 				if(count == 0 && words[i] == "exit")
 				{
+					for(int j =0; j<count;j++)
+					{
+						delete cmdlist[j];
+					}
+					delete cmdlist;
 					exit(1);
 				}
 				cmdlist[count] = new char[words[i].size()+1];
@@ -264,8 +289,14 @@ void exec_cmd(vector<string>&words,int& totalWordCount)
 				count++;
             }
         }
-
+		//normal case  memory clean up
+		for (int j = 0;j<count;j++)
+		{
+			delete cmdlist[j];	//delete the argument content
+		}
+		delete cmdlist;	//delete argument pointers
         totalWordCount = 0;
+
 }
 
 int main(int argc, char** argv)
