@@ -30,7 +30,7 @@ void prompt()
 void list_cmd(string& input, vector<string>&words,int& totalWordCount) //converts string into individal commands
 {
     vector<string> v; 
-	int cnt , wordCnt ; 
+	unsigned int  cnt , wordCnt ; 
 	string word=""; 
 	for(cnt=0,wordCnt=0;cnt<input.size();cnt++)
 	{
@@ -167,7 +167,7 @@ void exec_cmd(vector<string>&words,int& totalWordCount)
 		
         char **cmdlist = new char*[finalWordCount];
         int count = 0;
-        int index_then=-1;
+        //int index_then=-1;
         int index_else=-1;
         //int cmd_start=0;
         //for(int i = 0; i < totalWordCount; i++)
