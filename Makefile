@@ -1,10 +1,7 @@
-bin:
-	    mkdir bin
-rshell: bin
-		g++ -Wall -Werror -std=c++11 -pedantic ./src/hw0.cpp -o ./bin/rshell
-run: rshell
-		(cd bin && ./rshell)
+all: rshell 
+rshell:
+	mkdir -p ./bin
+	g++ -Wall -Werror -pedantic -ansi -pedantic ./src/hw0.cpp -o ./bin/rshell
 clean:
-	    rm -rf bin
-edit: 
-		(cd src && vim hw0.cpp)
+	rm -rf ./bin
+
