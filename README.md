@@ -30,5 +30,5 @@ $ bin/rshell
 ## Known Bugs, Issues, Limitations  
 -Rshell cannot use 'cd' command  
 -Tabs are not treated as spaces and instead are treated as a character.  
--Arrow keys are treated as characters and will not cycle through previous commands. 
+-Arrow keys are treated as characters and will not cycle through previous commands.  
 -File redirection('<' or '>' ) is not implemented
