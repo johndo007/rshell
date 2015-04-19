@@ -1,133 +1,71 @@
-Script started on Sat 18 Apr 2015 04:42:28 PM PDT
+Script started on Sun 19 Apr 2015 08:56:32 AM PDT
 ~
-aso001@hammer $ exitmake editrshell
-make[1]: Entering directory `/home/csmajs/aso001'
-make[1]: *** No rule to make target `rshell'.  Stop.
-make[1]: Leaving directory `/home/csmajs/aso001'
+aso001@hammer $ make run
+make: *** No rule to make target `run'.  Stop.
 ~
-aso001@hammer $ ls
+aso001@hammer $ mak[K[K[Kvim Makefile[K[K[K[K[K[K[K[K[K[K[K[Kls
 [0m[01;34mCS100[0m/  [01;34mDesktop[0m/  [01;34mWINDOWS[0m/
 [m~
-aso001@hammer $ cd CS100/Assignments/rshell/
-~/CS100/Assignments/rshell
-aso001@hammer $ make [K[K[K[K[Kls
-[0m[01;34mbin[0m/  LICENSE  Makefile  README.md  [01;34msrc[0m/  [01;34mtest[0m/
-[m~/CS100/Assignments/rshell
-aso001@hammer $ make run
-make[1]: Entering directory `/home/csmajs/aso001/CS100/Assignments/rshell'
-g++ -Wall -Werror -std=c++11 -pedantic ./src/hw0.cpp -o ./bin/rshell
-cc1plus: error: unrecognized command line option "-std=c++11"
-make[1]: *** [rshell] Error 1
-make[1]: Leaving directory `/home/csmajs/aso001/CS100/Assignments/rshell'
-~/CS100/Assignments/rshell
-aso001@hammer $ vim rs[K[KMakefile 
-[?1000h7[?47h[?1h=[1;50r[m[37m[40m[1m[H[2J[50;1H"Makefile" 11L, 195C[>c[1;1H[1m[33m  1 [m[37m[40m[1m[1m[36mbin:[m[37m[40m[1m
-[1m[33m  2 [m[37m[40m[1m[1m[35m        mkdir bin[m[37m[40m[1m
-[1m[33m  3 
-  4 [m[37m[40m[1m[1m[36mrshell:[m[37m[40m[1m bin
-[1m[33m  5 [m[37m[40m[1m[1m[35m        g++ -Wall -Werror -std=c++11 -pedantic ./src/hw0.cpp -o ./bin/rshell[m[37m[40m[1m
-[1m[33m  6 [m[37m[40m[1m[1m[36mrun:[m[37m[40m[1m rshell
-[1m[33m  7 [m[37m[40m[1m[1m[35m        (cd bin && ./rshell)[m[37m[40m[1m
-[1m[33m  8 [m[37m[40m[1m[1m[36mclean:[m[37m[40m[1m
-[1m[33m  9 [m[37m[40m[1m[1m[35m        rm -rf bin[m[37m[40m[1m
-[1m[33m 10 [m[37m[40m[1m[1m[36medit: [m[37m[40m[1m
-[1m[33m 11 [m[37m[40m[1m[1m[35m        [m[37m[40m[1m[1m[35m[46m([m[37m[40m[1m[1m[35mcd src && vim hw0.cpp[m[37m[40m[1m[1m[35m[46m)[m[37m[40m[1m
-[1m[34m~                                                                                                                                                                                            [13;1H~                                                                                                                                                                                            [14;1H~                                                                                                                                                                                            [15;1H~                                                                                                                                                                                            [16;1H~                                                                                                                                                                                            [17;1H~                                                                                                                                                                                            [18;1H~                                                                                                                                                                                            [19;1H~                                                                                                                                                                                            [20;1H~                                                                                                                                                                                            [21;1H~                                                                                                                                                                                            [22;1H~                                                                                                                                                                                            [23;1H~                                                                                                                                                                                            [24;1H~                                                                                                                                                                                            [25;1H~                                                                                                                                                                                            [26;1H~                                                                                                                                                                                            [27;1H~                                                                                                                                                                                            [28;1H~                                                                                                                                                                                            [29;1H~                                                                                                                                                                                            [30;1H~                                                                                                                                                                                            [31;1H~                                                                                                                                                                                            [32;1H~                                                                                                                                                                                            [33;1H~                                                                                                                                                                                            [34;1H~                                                                                                                                                                                            [35;1H~                                                                                                                                                                                            [36;1H~                                                                                                                                                                                            [37;1H~                                                                                                                                                                                            [38;1H~                                                                                                                                                                                            [39;1H~                                                                                                                                                                                            [40;1H~                                                                                                                                                                                            [41;1H~                                                                                                                                                                                            [42;1H~                                                                                                                                                                                            [43;1H~                                                                                                                                                                                            [44;1H~                                                                                                                                                                                            [45;1H~                                                                                                                                                                                            [46;1H~                                                                                                                                                                                            [47;1H~                                                                                                                                                                                            [48;1H~                                                                                                                                                                                            [49;1H~                                                                                                                                                                                            [m[37m[40m[1m[50;172H11,3-9[8CAll[11;13H[?1000l[?1002h[50;162H:[11;13H[50;1H[K[50;1H:q[?1002l[50;1H[K[50;1H[?1l>[2J[?47l8~/CS100/Assignments/rshell
-aso001@hammer $ make run
-make[1]: Entering directory `/home/csmajs/aso001/CS100/Assignments/rshell'
-g++ -Wall -Werror -std=c++11 -pedantic ./src/hw0.cpp -o ./bin/rshell
-cc1plus: error: unrecognized command line option "-std=c++11"
-make[1]: *** [rshell] Error 1
-make[1]: Leaving directory `/home/csmajs/aso001/CS100/Assignments/rshell'
-~/CS100/Assignments/rshell
-aso001@hammer $ cd r[Kbin/
-~/CS100/Assignments/rshell/bin
+aso001@hammer $ cd CS100/
+~/CS100
 aso001@hammer $ ls
-exec.script  [0m[01;32mrshell[0m*
-[m~/CS100/Assignments/rshell/bin
-aso001@hammer $ rs[K[Ks[K./rshell
-aso001@hammer.cs.ucr.edu $ e ls
-exec.script  rshell
-aso001@hammer.cs.ucr.edu $ ls -
-ls: cannot access -: No such file or directory
-aso001@hammer.cs.ucr.edu $ ls -a
-.  ..  exec.script  rshell
-aso001@hammer.cs.ucr.edu $ ls -a -l
-total 60
-drwx------ 2 aso001 csmajs  4096 Apr 18 16:36 .
-drwx------ 6 aso001 csmajs  4096 Apr 18 16:38 ..
--rw------- 1 aso001 csmajs     0 Apr 18 16:36 exec.script
--rwx------ 1 aso001 csmajs 51278 Apr 18 16:36 rshell
+[0m[01;34mAssignments[0m/  [01;34mGITHUB[0m/  [01;34mLAB[0m/  [01;34mReference[0m/  [01;34mucr-cs100[0m/
+[m~/CS100
+aso001@hammer $ cd Assignments/
+~/CS100/Assignments
+aso001@hammer $ ls
+[0m[01;34mrshell[0m/
+[m~/CS100/Assignments
+aso001@hammer $ cd rshell/
+~/CS100/Assignments/rshell
+aso001@hammer $ make run
+mkdir bin
+g++  ./src/hw0.cpp -o ./bin/rshell
+(cd bin && ./rshell)
 aso001@hammer.cs.ucr.edu $ echo hi
 hi
-aso001@hammer.cs.ucr.edu $ h echo hi & e cat     echo thi  s is a test
-hi & echo this is a test
-aso001@hammer.cs.ucr.edu $ echo hi && this a is a second test
+aso001@hammer.cs.ucr.edu $ ls && echo test
+rshell
+test
+aso001@hammer.cs.ucr.edu $ echo ls  hi&&echo this&&    s echo
+hi
+this
+
+aso001@hammer.cs.ucr.edu $ ls
+rshell
+aso001@hammer.cs.ucr.edu $ ls -R
+.:
+rshell
+aso001@hammer.cs.ucr.edu $ l ma  pwd
+/home/csmajs/aso001/CS100/Assignments/rshell/bin
+aso001@hammer.cs.ucr.edu $ p mkdir test
+aso001@hammer.cs.ucr.edu $ ls
+rshell	test
+aso001@hammer.cs.ucr.edu $  ls -l
+total 40
+-rwx------ 1 aso001 csmajs 36792 Apr 19 08:51 rshell
+drwx------ 2 aso001 csmajs  4096 Apr 19 08:53 test
+aso001@hammer.cs.ucr.edu $ echoo  hi && echooo hello || echo bad;ls
 hi
 ERROR: EXECUTING THE CMD FAILED
 : No such file or directory
-aso001@hammer.cs.ucr.edu $ echo hi && echo this is the real second test
-hi
-this is the real second test
-aso001@hammer.cs.ucr.edu $ ls -R || echo hi
-.:
-exec.script  rshell
-aso001@hammer.cs.ucr.edu $ ls; ls; ls; ls;
-exec.script  rshell
-exec.script  rshell
-exec.script  rshell
-exec.script  rshell
-aso001@hammer.cs.ucr.edu $ ls && echo hi || echo no  error
-exec.script  rshell
-hi
-aso001@hammer.cs.ucr.edu $ echo testing rshell clling itslef    self
-testing rshell clling itself
-aso001@hammer.cs.ucr.edu $ ./rshell
-aso001@hammer.cs.ucr.edu $ ech   echo e testing if user is being mean to the shell
-testing if user is being mean to the shell
-aso001@hammer.cs.ucr.edu $ echo hi&&echo is should not see thsi  is
-hi
-is should not see this
-aso001@hammer.cs.ucr.edu $ echo hi||I should never                 echo I should not see this msg here
-hi |echo I should not see this msg here
-aso001@hammer.cs.ucr.edu $ ^[[A    echo hi||echo I should not see this msg here
-hi
-aso001@hammer.cs.ucr.edu $ ec  echo ma    hi me > test.txt
-hi me > test.txt
-aso001@hammer.cs.ucr.edu $ ls
-exec.script  rshell
-aso001@hammer.cs.ucr.edu $ echo file rede irection failed
-file redirection failed
-aso001@hammer.cs.ucr.edu $ pwd
-/home/csmajs/aso001/CS100/Assignments/rshell/bin
-aso001@hammer.cs.ucr.edu $ cd ..
-Loading cmd1...
-aso001@hammer.cs.ucr.edu $ ls
-exec.script  rshell
-aso001@hammer.cs.ucr.edu $ cd  echo cd is not implemented for this assignment
-cd is not implemented for this assignment
-aso001@hammer.cs.ucr.edu $ exit
-aso001@hammer.cs.ucr.edu $ ls
-exec.script  rshell
-aso001@hammer.cs.ucr.edu $ echo   o exited out the   of the second run
-exited out of the second run
-aso001@hammer.cs.ucr.edu $ exit
-aso001@hammer.cs.ucr.edu $ ps
-  PID TTY          TIME CMD
-30371 pts/73   00:00:00 bash
-30827 pts/73   00:00:00 rshell
-31946 pts/73   00:00:00 ps
-aso001@hammer.cs.ucr.edu $ exit
-~/CS100/Assignments/rshell/bin
-aso001@hammer $ ps
-  PID TTY          TIME CMD
-30371 pts/73   00:00:00 bash
-31959 pts/73   00:00:00 ps
-~/CS100/Assignments/rshell/bin
-aso001@hammer $ echo end of test 4/18/15
-end of test 4/18/15
-~/CS100/Assignments/rshell/bin
+bad
+rshell	test
+aso001@hammer.cs.ucr.edu $ ecoo  hooo  msg1 && echo msg2 |||  echoo  msg3
+ERROR: EXECUTING THE CMD FAILED
+: No such file or directory
+ERROR: EXECUTING THE CMD FAILED
+: No such file or directory
+msg3
+aso001@hammer.cs.ucr.edu $ echoo one || echo two || echo       &&echo three
+ERROR: EXECUTING THE CMD FAILED
+: No such file or directory
+two
+three
+aso001@hammer.cs.ucr.edu $ c exit
+make: *** [run] Error 1
+~/CS100/Assignments/rshell
 aso001@hammer $ exit
 exit
 
-Script done on Sat 18 Apr 2015 04:53:20 PM PDT
+Script done on Sun 19 Apr 2015 09:01:21 AM PDT
