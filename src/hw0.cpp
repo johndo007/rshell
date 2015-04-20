@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
-
+#include <fcntl.h>
 using namespace std;
 
 void prompt()
@@ -112,20 +112,47 @@ void list_cmd(string& input, vector<string>&words,int& totalWordCount) //convert
 				else
 				{
 					word = '|';
+					v.push_back(word);
+					totalWordCount++;
 				}
 			}
-			else    //with space 
+		}
+		else if(input.at(cnt)=='>') //case5 - redirect out >
+        {		
+			if(word != "" && !word.empty())	//with no space
 			{
-				if(input[cnt+1] == '|')
+				v.push_back(word);
+				totalWordCount++;
+				if(input[cnt+1] == '>')
 				{
-					v.push_back("||");
+					v.push_back(">>");
 					word="";
 					cnt++;
 					totalWordCount++;	
 				}
 				else
 				{
-					word = '|';
+					word = ">";
+					v.push_back(word);
+					totalWordCount++;
+				}
+			}
+		
+			else    //with space 
+			{
+				if(input[cnt+1] == '>')
+				{
+					v.push_back(">>");
+					word="";
+					cnt++;
+					totalWordCount++;	
+				}
+				else
+				{
+					word = ">";
+					v.push_back(word);
+					totalWordCount++;
+					
 				}
 			}
 		}
@@ -184,6 +211,9 @@ void exec_cmd(vector<string>&words,int& totalWordCount)
 				
 				int pid = 0;
 				int status = 0;
+				//int fwmode=-1;   //file redirecting operation
+				//int fw=-1;		//file out handle
+				
 				pid = fork();
 				if(pid <= -1) // something went wrong
 				{
@@ -198,6 +228,35 @@ void exec_cmd(vector<string>&words,int& totalWordCount)
 				else if(pid == 0) //starting  child process
 				{
 					cmdlist[count] = NULL;
+					/*
+					//processing any redirecting operation
+					int r;
+					fwmode=-1;
+					for( r=1;r<count;r++)
+					{
+						int s=sizeof(cmdlist[r])/2;
+						if(cmdlist[r][0]=='>')
+						{//redirect-out
+							if(s>1)fwmode=2; //append
+							else fwmode=1;   //create
+							break;
+						}
+					}
+					if(fwmode>0) //redirect-out operation
+					{
+						cmdlist[r]='\0'; //set NULL
+						if(fwmode==1)
+						fw=open(cmdlist[r+1],O_WRONLY|O_TRUNC|O_CREAT,S_IRUSR|S_IRGRP|S_IWGRP|S_IWUSR);
+						if(fwmode==2)
+						fw=open(cmdlist[r+1],O_WRONLY|O_APPEND,S_IRUSR|S_IRGRP|S_IWGRP|S_IWUSR);
+						dup2(fw,1);	//replace standard output(1) with output file=cmdlist[r+1]
+										
+					}
+
+				
+					if(fwmode>0)close(fw);	//close file handle before child process
+					*/
+					
 					int success;
 					if(pid==0)
 					
@@ -242,6 +301,7 @@ void exec_cmd(vector<string>&words,int& totalWordCount)
 				else // parent process---wait until the child is done 
 				{
 					waitpid(-1, &status, 0);
+					//if(fwmode>0)close(fw);
             
 					if(words[i] == "&&" && (status > 0))	//failed on prameter 
 					{
@@ -250,7 +310,7 @@ void exec_cmd(vector<string>&words,int& totalWordCount)
 						x = i+1;
 						for(;x<totalWordCount; x++)
 						{
-							if(words[i]== "&&"||words[i]=="||"||words[i]==";")
+							if(words[x]== "&&"||words[x]=="||"||words[x]==";")
 							{
 								index_else = x;
 								break;
@@ -261,6 +321,26 @@ void exec_cmd(vector<string>&words,int& totalWordCount)
 							i = index_else;
 							index_else = -1;
 						}
+					}
+					if(words[i] == "||" && (status == 0))
+					{//break;
+						int x;
+						index_else = -1;
+						x = i+1;
+						for(;x<totalWordCount; x++)
+						{
+							if(words[x]== "&&"||words[x]=="||"||words[x]==";")
+							{
+								index_else = x;
+								break;
+							}
+						}
+						if(index_else>0)
+						{
+							i = index_else;
+							index_else = -1;
+						}
+						
 					}
 				}
 				 // reset the list
