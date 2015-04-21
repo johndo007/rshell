@@ -29,9 +29,9 @@ void prompt()
 
 void list_cmd(string& input, vector<string>&words,int& totalWordCount) //converts string into individal commands
 {
-    vector<string> v; 
-	unsigned int  cnt , wordCnt ; 
-	string word=""; 
+    vector<string> v;
+	unsigned int  cnt , wordCnt ;
+	string word="";
 	for(cnt=0,wordCnt=0;cnt<input.size();cnt++)
 	{
 		if(input.at(cnt) == '#') //case 0 - #
@@ -40,13 +40,13 @@ void list_cmd(string& input, vector<string>&words,int& totalWordCount) //convert
 			{
 				v.push_back(word);
 			}
-			v.push_back(";");	
+			v.push_back(";");
 			word = "";
 			break;
 		}
 		else if(input.at(cnt) == ' ') //case1 - space
 		{
-		    if(!word.empty() && word != "" && word != " ") 
+		    if(!word.empty() && word != "" && word != " ")
 		    {
 			    v.push_back(word);
 			    word = "";
@@ -55,16 +55,16 @@ void list_cmd(string& input, vector<string>&words,int& totalWordCount) //convert
 	    }
 	    else if(input.at(cnt) == ';') //case2 - semicolon
         {
-            if(word != "" && word != " ") 
+            if(word != "" && word != " ")
             {
-                v.push_back(word); 
+                v.push_back(word);
                 totalWordCount++;
             }
-            v.push_back(";"); 
+            v.push_back(";");
             word = ""; // reset word
         }
         else if(input.at(cnt)=='&') //case3 - ampercent &
-        {		
+        {
 			if(word != "" && !word.empty())	//with no space
 			{
 				v.push_back(word);
@@ -74,21 +74,21 @@ void list_cmd(string& input, vector<string>&words,int& totalWordCount) //convert
 					v.push_back("&&");
 					word="";
 					cnt++;
-					totalWordCount++;	
+					totalWordCount++;
 				}
 				else
 				{
 					word = '&';
 				}
 			}
-			else    //with space 
+			else    //with space
 			{
 				if(input[cnt+1] == '&')
 				{
 					v.push_back("&&");
 					word="";
 					cnt++;
-					totalWordCount++;	
+					totalWordCount++;
 				}
 				else
 				{
@@ -97,7 +97,7 @@ void list_cmd(string& input, vector<string>&words,int& totalWordCount) //convert
 			}
 		}
 		else if(input.at(cnt)=='|') //case4 - bar |
-        {		
+        {
 			if(word != "" && !word.empty())	//with no space
 			{
 				v.push_back(word);
@@ -107,7 +107,7 @@ void list_cmd(string& input, vector<string>&words,int& totalWordCount) //convert
 					v.push_back("||");
 					word="";
 					cnt++;
-					totalWordCount++;	
+					totalWordCount++;
 				}
 				else
 				{
@@ -118,7 +118,7 @@ void list_cmd(string& input, vector<string>&words,int& totalWordCount) //convert
 			}
 		}
 		else if(input.at(cnt)=='>') //case5 - redirect out >
-        {		
+        {
 			if(word != "" && !word.empty())	//with no space
 			{
 				v.push_back(word);
@@ -128,7 +128,7 @@ void list_cmd(string& input, vector<string>&words,int& totalWordCount) //convert
 					v.push_back(">>");
 					word="";
 					cnt++;
-					totalWordCount++;	
+					totalWordCount++;
 				}
 				else
 				{
@@ -137,22 +137,22 @@ void list_cmd(string& input, vector<string>&words,int& totalWordCount) //convert
 					totalWordCount++;
 				}
 			}
-		
-			else    //with space 
+
+			else    //with space
 			{
 				if(input[cnt+1] == '>')
 				{
 					v.push_back(">>");
 					word="";
 					cnt++;
-					totalWordCount++;	
+					totalWordCount++;
 				}
 				else
 				{
 					word = ">";
 					v.push_back(word);
 					totalWordCount++;
-					
+
 				}
 			}
 		}
@@ -163,7 +163,7 @@ void list_cmd(string& input, vector<string>&words,int& totalWordCount) //convert
     	}
 		wordCnt++;
 	}
-	
+
 	if(word != "" && word != " ")	//end of the cmd string
 	{
 		v.push_back(word);
@@ -174,13 +174,13 @@ void list_cmd(string& input, vector<string>&words,int& totalWordCount) //convert
 		totalWordCount++;
 	}
 	totalWordCount++;
-	if(v.at(v.size()-1) != ";") 
-    { 
-        v.push_back(";"); 
+	if(v.at(v.size()-1) != ";")
+    {
+        v.push_back(";");
     }
 	totalWordCount = v.size();
 	words = v;	//update vector with contents of v by reference
-    
+
 }
 
 void exec_cmd(vector<string>&words,int& totalWordCount)
@@ -190,31 +190,25 @@ void exec_cmd(vector<string>&words,int& totalWordCount)
 		for(int i=0;i<finalWordCount-1;i++)
         cout<<"Argv="<<i<<":"<<words[i]<<endl;
 		return;
-		*/	
-		
+		*/
+
         char **cmdlist = new char*[finalWordCount];
         int count = 0;
-        //int index_then=-1;
         int index_else=-1;
-        //int cmd_start=0;
-        //for(int i = 0; i < totalWordCount; i++)
-        //{
-			//if(words[i]=="&&")index_then=i+1;
-			//if(words[i]=="||")index_else=i+1;
-		//}
+        //int index_then=-1;
+
         for(int i = 0; i < totalWordCount; i++)
         {
 			if((words[i] == ";") || words[i] == "||" || (words[i] == "&&"))
 			{
-				
 				//execute the command
-				
+
 				int pid = 0;
 				int status = 0;
-				//int fwmode=-1;   //file redirecting operation
-				//int fw=-1;		//file out handle
-				
+				bool abort = false; // meaning ls has not been called
+
 				pid = fork();
+
 				if(pid <= -1) // something went wrong
 				{
 					perror("ERROR [FORK]: CHILD FAILED\n");
@@ -225,7 +219,15 @@ void exec_cmd(vector<string>&words,int& totalWordCount)
 					delete cmdlist;
 					exit(1); // quit the program
 				}
-				else if(pid == 0) //starting  child process
+
+				if(cmdlist[0]=="ls")    //begin hw1 ls assignment
+                {
+                    cout<<"ls was called!"<<endl;
+                    //ls_command(cmdlist);
+                    abort = true;
+                }
+
+				else if(pid == 0 && abort == false) //starting  child process
 				{
 					cmdlist[count] = NULL;
 					/*
@@ -250,20 +252,20 @@ void exec_cmd(vector<string>&words,int& totalWordCount)
 						if(fwmode==2)
 						fw=open(cmdlist[r+1],O_WRONLY|O_APPEND,S_IRUSR|S_IRGRP|S_IWGRP|S_IWUSR);
 						dup2(fw,1);	//replace standard output(1) with output file=cmdlist[r+1]
-										
+
 					}
 
-				
+
 					if(fwmode>0)close(fw);	//close file handle before child process
 					*/
-					
+
 					int success;
 					if(pid==0)
-					
+
 					success = execvp(cmdlist[0], &cmdlist[0]);
 					if(success <= -1 ) // nope, it failed ... failed on command
 					{
-						
+
 						perror("ERROR: EXECUTING THE CMD FAILED\n");
 						//exit(1);
 						int x;
@@ -274,7 +276,7 @@ void exec_cmd(vector<string>&words,int& totalWordCount)
 						else
 							x = i;	//look for next possible connector
 						for( ; x < totalWordCount; x++)
-						{						
+						{
 							if(words[i]=="||"||words[i]=="&&"||words[i]==";")
 							{
 								index_else = x;
@@ -284,9 +286,9 @@ void exec_cmd(vector<string>&words,int& totalWordCount)
 						if(index_else>0)
 						{
 							i=index_else;
-							index_else =-1;	
+							index_else =-1;
 						}
-						
+
 					}
 
 					for(int j = 0; j < count; j++)
@@ -298,12 +300,12 @@ void exec_cmd(vector<string>&words,int& totalWordCount)
 					exit(success);
 				}
 
-				else // parent process---wait until the child is done 
+				else // parent process---wait until the child is done
 				{
 					waitpid(-1, &status, 0);
 					//if(fwmode>0)close(fw);
-            
-					if(words[i] == "&&" && (status > 0))	//failed on prameter 
+
+					if(words[i] == "&&" && (status > 0))	//failed on prameter
 					{
 						int x;
 						index_else = -1;
@@ -340,7 +342,7 @@ void exec_cmd(vector<string>&words,int& totalWordCount)
 							i = index_else;
 							index_else = -1;
 						}
-						
+
 					}
 				}
 				 // reset the list
@@ -351,9 +353,9 @@ void exec_cmd(vector<string>&words,int& totalWordCount)
 				 }
 				 count = 0;
             }
-            else  //simple command case or beginning of if-then cmd 
+            else  //simple command case or beginning of if-then cmd
 			{
-            
+
 				if(count == 0 && words[i] == "exit")
 				{
 					for(int j =0; j<count;j++)
@@ -388,13 +390,13 @@ int main(int argc, char** argv)
 	while(true)
 	{
         prompt(); //Setup user prompt
-      	
-		getline (cin, input);		
-		       
+
+		getline (cin, input);
+
         ///break up commands
         list_cmd(input, words,wordcnt);
 
-        ///execute commands        
+        ///execute commands
         exec_cmd(words,wordcnt);
 	}
 	return 0;
