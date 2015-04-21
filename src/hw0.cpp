@@ -3,11 +3,12 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <vector>
-#include <string>
+#include <string.h>
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <dirent.h>
 using namespace std;
 
 void prompt()
@@ -183,6 +184,62 @@ void list_cmd(string& input, vector<string>&words,int& totalWordCount) //convert
 
 }
 
+void ls_cmd(char** argv)
+{
+	cout<<"ls was called"<<endl;
+	//assume ls was called
+	DIR *mydir;
+	int x = 0;
+	string path = ".";
+	vector<bool> flag;
+	for(int i = 0; i < 3;i++)  flag.push_back(false);
+	//bool aflag = false;
+	//bool lflag = false;
+	//bool Rflag = false;
+	for(;argv[x]!=NULL ;x++ )
+	{
+		if(argv[x][0]!='-' && x!=0) path = argv[x];
+		//first part of parameter uses '-'
+		if(argv[x][0]=='-')
+		{
+			//-a -l -R
+			for(int y = 1; argv[x][y]!='\0'; y++)
+			{
+				char input = argv[x][y];
+				switch(input)
+				{
+					case 'a':
+						flag[0] = true;
+						cout<< "-a flag was called"<<endl;
+						break;
+					case 'l':
+						flag[1] = true;
+						cout<< "-l flag was called"<<endl;
+						break;
+					case 'R':
+						flag[2] = true;
+						cout<< "-R flag was called"<<endl;
+						break;
+					default:
+						cout<<"Unknown command: "<< input <<endl;
+						break;
+				
+				}
+			}
+
+			//push parameters into helper ls executive  function
+			ls_exec(flag, path);
+
+		}
+	
+	}
+}
+
+void ls_exec(vector<bool> &flag, string &path)
+{
+	
+}
+
 void exec_cmd(vector<string>&words,int& totalWordCount)
 {
         const int finalWordCount = totalWordCount+1;
@@ -220,14 +277,7 @@ void exec_cmd(vector<string>&words,int& totalWordCount)
 					exit(1); // quit the program
 				}
 
-				if(cmdlist[0]=="ls")    //begin hw1 ls assignment
-                {
-                    cout<<"ls was called!"<<endl;
-                    //ls_command(cmdlist);
-                    abort = true;
-                }
-
-				else if(pid == 0 && abort == false) //starting  child process
+				if(pid == 0 && abort == false) //starting  child process
 				{
 					cmdlist[count] = NULL;
 					/*
@@ -260,7 +310,14 @@ void exec_cmd(vector<string>&words,int& totalWordCount)
 					*/
 
 					int success;
-					if(pid==0)
+					if(strcmp(cmdlist[0],"ls")==0)
+					{
+						//cout<<"ls was called"<<endl;
+						ls_cmd(cmdlist);
+						abort = true;
+					}
+
+					if(pid==0 && abort  == false)   
 
 					success = execvp(cmdlist[0], &cmdlist[0]);
 					if(success <= -1 ) // nope, it failed ... failed on command
