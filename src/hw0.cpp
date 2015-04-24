@@ -22,7 +22,6 @@ using namespace std;
 #define DIR_R	 4  //-R
 
 
-
 void prompt()
 {
 	//get user info
@@ -65,7 +64,7 @@ void list_cmd(string& input, vector<string>&words,int& totalWordCount) //convert
 			    word = "";
 			    totalWordCount++;
 		    }else {word="";}
-	    }
+	    }:
 	    else if(input.at(cnt) == ';') //case2 - semicolon
         {
             if(word != "" && word != " ")
@@ -119,7 +118,7 @@ void list_cmd(string& input, vector<string>&words,int& totalWordCount) //convert
 				{
 					v.push_back("||");
 					word="";
-					cnt++;
+		:			cnt++;
 					totalWordCount++;
 				}
 				else
@@ -220,12 +219,49 @@ vector<string> read_filenames(string &path)
 	
 }
 
+void print_ALL(string &path, vector<string> &path, int &mode)
+{
+	if((mode & DIR_LONG) && (mode & DIR_R))
+	{
+		//print -alR
+	}
+	else if(mode & DIR_LONG)
+	{
+		//print  -al
+	}
+	else if(mode & DIR_R)
+	{
+		//print -aR
+	}
+	else
+	{
+		//default print -a
+		for(int i =0; i<v.size();i++)
+		{
+			cout<<v[i]<<endl;
+		}
+	}
+	
+
+}
+
+void print_LONG(string &path, vector<string> &path, int &mode)
+{
+	
+}
+
+void print_R(string &path, vector<string> &path, int &mode)
+{
+
+}
+
 void ls_cmd(char** argv)
 {
-	i//cout<<"ls was called"<<endl;
+	//cout<<"ls was called"<<endl;
 	//assume ls was called
 	//DIR *mydir;
 	int x = 0;
+	int mode = 0;
 	string path = ".";
 	vector<string> v;
 	vector<bool> flag;
@@ -243,15 +279,18 @@ void ls_cmd(char** argv)
 				switch(input)
 				{
 					case 'a':
-						flag[0] = true;
+						mode |= DIR_ALL;
+						//flag[0] = true;
 						//cout<< "-a flag was called"<<endl;
 						break;
 					case 'l':
+						mode |= DIR_LONG
 						flag[1] = true;
 						//cout<< "-l flag was called"<<endl;
 						break;
 					case 'R':
-						flag[2] = true;
+						mode |= DIR_R;
+						//flag[2] = true;
 						//cout<< "-R flag was called"<<endl;
 						break;
 					default:
@@ -263,12 +302,17 @@ void ls_cmd(char** argv)
 
 			//push parameters into ls helper  read function
 			v = read_filenames(path);
-			for(int i = 0; i< v.size();i++)
+			/*for(int i = 0; i< v.size();i++)
 			{
 				cout<<v[i]<<endl;
-			}
+			}*/
 
+			if(mode & DIR_ALL) print_ALL(path,v,mode);	//if -a is true
+
+			if(mode & DIR_LONG) print_LONG(path,v,mode);	//if -l is true
 			
+			if(mode & DIR_R) print_R(path,v,mode);	//if -R is true
+
 		}
 		else
 		{
