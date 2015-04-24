@@ -1,6 +1,8 @@
 #include <iostream>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <time.h>
 #include <unistd.h>
 #include <vector>
 #include <string.h>
@@ -9,7 +11,17 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <algorithm>
+#include <pwd.h>
+
 using namespace std;
+
+//defining bit values
+#define DIR_ALL  1	//-a
+#define DIR_LONG 2	//-l
+#define DIR_R	 4  //-R
+
+
 
 void prompt()
 {
@@ -184,18 +196,40 @@ void list_cmd(string& input, vector<string>&words,int& totalWordCount) //convert
 
 }
 
+vector<string> read_filenames(string &path)
+{
+	DIR*  dir_ptr = opendir(path.c_str());
+	vector<string> filenames;
+	dirent* dir_en;
+	filenames.clear();
+	if(dir_ptr)
+	{
+		while(true)
+		{
+			errno = 0;
+			dir_en = readdir(dir_ptr);
+			if(dir_en == NULL) break;
+			{
+				filenames.push_back(std::string(dir_en -> d_name));
+			}
+		}
+		closedir(dir_ptr);
+		sort(filenames.begin(), filenames.end() );
+	} 
+	return filenames;
+	
+}
+
 void ls_cmd(char** argv)
 {
-	cout<<"ls was called"<<endl;
+	i//cout<<"ls was called"<<endl;
 	//assume ls was called
-	DIR *mydir;
+	//DIR *mydir;
 	int x = 0;
 	string path = ".";
+	vector<string> v;
 	vector<bool> flag;
 	for(int i = 0; i < 3;i++)  flag.push_back(false);
-	//bool aflag = false;
-	//bool lflag = false;
-	//bool Rflag = false;
 	for(;argv[x]!=NULL ;x++ )
 	{
 		if(argv[x][0]!='-' && x!=0) path = argv[x];
@@ -210,15 +244,15 @@ void ls_cmd(char** argv)
 				{
 					case 'a':
 						flag[0] = true;
-						cout<< "-a flag was called"<<endl;
+						//cout<< "-a flag was called"<<endl;
 						break;
 					case 'l':
 						flag[1] = true;
-						cout<< "-l flag was called"<<endl;
+						//cout<< "-l flag was called"<<endl;
 						break;
 					case 'R':
 						flag[2] = true;
-						cout<< "-R flag was called"<<endl;
+						//cout<< "-R flag was called"<<endl;
 						break;
 					default:
 						cout<<"Unknown command: "<< input <<endl;
@@ -227,17 +261,27 @@ void ls_cmd(char** argv)
 				}
 			}
 
-			//push parameters into helper ls executive  function
-			ls_exec(flag, path);
+			//push parameters into ls helper  read function
+			v = read_filenames(path);
+			for(int i = 0; i< v.size();i++)
+			{
+				cout<<v[i]<<endl;
+			}
 
+			
+		}
+		else
+		{
+			//assume path name
+			path = argv[0];
+			v = read_filenames(path);
+			for(int i = 0; i<v.size();i++)
+			{
+				cout<<v[i]<<endl;
+			}
 		}
 	
 	}
-}
-
-void ls_exec(vector<bool> &flag, string &path)
-{
-	
 }
 
 void exec_cmd(vector<string>&words,int& totalWordCount)
