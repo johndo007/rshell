@@ -1,6 +1,18 @@
 #ifndef LS_CMD_H__
 #define LS_CMD_H__
 
+#include <vector>
+#include <dirent.h>
+#include <cstring>
+#include <string.h>
+#include <iostream>
+#include <algorithm>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+using namespace std;
+
 //defining bit values
 #define DIR_ALL  1	//-a
 #define DIR_LONG 2	//-l
@@ -8,15 +20,18 @@
 
 vector<string> read_filenames(string &path)
 {
+	//cout<<"running readfile names"<<endl;
+	//cout<<"Path: " <<path<<endl;
 	DIR*  dir_ptr = opendir(path.c_str());
 	vector<string> filenames;
 	dirent* dir_en;
 	filenames.clear();
 	if(dir_ptr)
 	{
+		//cout<<"open dir"<<endl;
 		while(true)
 		{
-			errno = 0;
+			//int errno = 0;
 			dir_en = readdir(dir_ptr);
 			if(dir_en == NULL) break;
 			{
@@ -30,8 +45,9 @@ vector<string> read_filenames(string &path)
 
 }
 
-void print_ALL(string &path, vector<string> &path, int &mode)
+void print_ALL(string &path, vector<string> &v, int &mode)
 {
+	//cout<<"Print all"<<endl;
 	if((mode & DIR_LONG) && (mode & DIR_R))
 	{
 		//print -alR
@@ -39,6 +55,7 @@ void print_ALL(string &path, vector<string> &path, int &mode)
 	else if(mode & DIR_LONG)
 	{
 		//print  -al
+
 	}
 	else if(mode & DIR_R)
 	{
@@ -46,54 +63,69 @@ void print_ALL(string &path, vector<string> &path, int &mode)
 	}
 	else
 	{
+		//cout<<"Size of v: "<<v.size()<<endl;
 		//default print -a
 		for(int i =0; i<v.size();i++)
 		{
-			cout<<v[i]<<endl;
-		}
+			cout<<v[i]<<"  ";
+		} 
+		cout<<endl;
 	}
 
 
 }
 
-void print_LONG(string &path, vector<string> &path, int &mode)
+void print_LONG(string &path, vector<string> &v, int &mode)
 {
-
+	cout<<"-l called"<<endl ;
 }
 
-void print_R(string &path, vector<string> &path, int &mode)
+void print_R(string &path, vector<string> &v, int &mode)
 {
-
+	cout<<"-R called"<<endl ;
 }
 
 void ls_cmd(char** argv)
 {
-	//cout<<"ls was called"<<endl;
+	//cout<<"ls_cmd  was called"<<endl;
 	//assume ls was called
 	//DIR *mydir;
-	int x = 0;
+	int x = 1;
 	int mode = 0;
 	string path = ".";
 	vector<string> v;
 	//vector<bool> flag;
 	//for(int i = 0; i < 3;i++)  flag.push_back(false);
+	/*for(int i = 0 ;argv[i]!=NULL ;i++)
+	{
+		cout<<argv[i]<<endl;
+	}*/
+
+
 	for(;argv[x]!=NULL ;x++ )
 	{
-		if(argv[x][0]!='-' && x!=0) path = argv[x];
+		
+		//cout<<"ls_cmd1  was called"<<endl;
+		if(argv[x][0]!='-' && x!=0)
+		{
+			cout<<"argv[x]="<<argv[x]<<endl;
+			path = argv[x];
+		}
 		//first part of parameter uses '-'
 		if(argv[x][0]=='-')
 		{
 			//-a -l -R
+			//cout<<"ls_cmd argv ' -' was called"<<endl;
 			for(int y = 1; argv[x][y]!='\0'; y++)
 			{
 				char input = argv[x][y];
 				switch(input)
 				{
 					case 'a':
-						mode |= DIR_ALL
+						mode |= DIR_ALL;
 						break;
 					case 'l':
-						mode |= DIR_LONG
+						mode |= DIR_LONG;
 						break;
 					case 'R':
 						mode |= DIR_R;
@@ -107,6 +139,7 @@ void ls_cmd(char** argv)
 
 			//push parameters into ls helper  read function
 			v = read_filenames(path);
+			//cout<<"ls_cmd read paths  was called"<<endl;
 			/*for(int i = 0; i< v.size();i++)
 			{
 				cout<<v[i]<<endl;

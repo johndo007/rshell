@@ -1,6 +1,7 @@
 #ifndef _SHELL_H__
 #define _SHELL_H__
 
+#include <iostream>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -8,19 +9,17 @@
 #include <time.h>
 #include <unistd.h>
 #include <vector>
-#include <string.h>
+#include <string>
+#include <cstring>
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <fcntl.h>
-#include <dirent.h>
 #include <algorithm>
 #include <pwd.h>
+#include "ls_cmd.h"
 using namespace std;
 
-class SHELL
-{
-    public:
     void prompt()   //get user info ... DONE
     {
         if (getlogin() != NULL) //only runs if there is a login user
@@ -251,9 +250,10 @@ class SHELL
                         if(success <= -1 ) // nope, it failed ... failed on command
                         {
 
-                            perror(cmdlist[0]);
+                            // perror(cmdlist[0]);
                             //exit(1);
-                            int x;
+                            cerr<<"CMD Error:  "<<cmdlist[0]<<endl;
+							int x;
                             index_else =-1;
                             if(words[i]== "&&")
                             //start copying here
@@ -364,7 +364,6 @@ class SHELL
             delete cmdlist;	//delete argument pointers
             totalWordCount = 0;
 
-    }
-};
+}
 
 #endif // _SHELL_H__
