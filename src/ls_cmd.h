@@ -77,6 +77,8 @@ void get_color_code (mode_t st_mode, char *color_fmt)
 	}
 }
 
+void print_ALL(string &path, vector<string> &v, int mode);
+
 string make_string(string &path, string &fname, string &output, int &mode)
 {
     struct stat statBuf;
@@ -141,12 +143,12 @@ string make_string(string &path, string &fname, string &output, int &mode)
 	return output;
 }
 
-void recurdir3(string &path, vector<string> &v, int &mode)
+void recurdir3(string &path, vector<string> &v, int mode)
 {
     DIR* dir_ptr;
 	string temp_path;
 	vector<string>tempv;
-
+    print_ALL(path,v,mode);   //print current Dir filenames
 	for(unsigned int x=0;x<v.size();x++)
     {
         if(v[x]==".")continue;
@@ -161,25 +163,7 @@ void recurdir3(string &path, vector<string> &v, int &mode)
 
                 tempv=read_filenames(temp_path);
                 //display content
-                for(unsigned int i = 0; i<temp_path;i++)
-				{
-					if(mode & DIR_ALL)
-					{
-						//print all
-						cout<< temp_path[i]<<" ";
-					}
-					else if(mode & DIR_LONG)
-					{
-						//long r
-					}
-					else
-					{
-						if(temp_path[i][0]!='.')
-							cout<<temp_path[i]<< " ";
-					}
 
-				} 
-				cout<<endl;
 
                 if(temp_path.size()>0)
                 {
@@ -195,7 +179,7 @@ void recurdir3(string &path, vector<string> &v, int &mode)
 }
 
 
-void print_ALL(string &path, vector<string> &v, int &mode)
+void print_ALL(string &path, vector<string> &v, int mode)
 {
 	//cout<<"Print all"<<endl;
 	if((mode & DIR_LONG) && (mode & DIR_R))
@@ -222,7 +206,22 @@ void print_ALL(string &path, vector<string> &v, int &mode)
 		//default print -a
 		for(unsigned int i =0; i<v.size();i++)
 		{
-			cout<<v[i]<<"  ";
+		    if(mode&DIR_ALL)
+            {
+                string output= make_string(path, v[x], output, mode);
+                cout<<output<<"  ";
+            }
+            else
+            {
+
+                if(v[i][0]!='.')
+                {
+                    string output= make_string(path, v[x], output, mode);
+                    cout<<output<<"  ";
+                }
+            }
+
+			//cout<<v[i]<<"  ";
 		}
 		cout<<endl;
 	}
@@ -230,7 +229,7 @@ void print_ALL(string &path, vector<string> &v, int &mode)
 
 }
 
-void print_LONG(string &path, vector<string> &v, int &mode)
+void print_LONG(string &path, vector<string> &v, int mode)
 {
 	cout<<"-l called"<<endl ;
 	for(unsigned  int x = 0; x <v.size();x++)
@@ -243,7 +242,7 @@ void print_LONG(string &path, vector<string> &v, int &mode)
     }
 }
 
-void print_R(string &path, vector<string> &v, int &mode)
+void print_R(string &path, vector<string> &v, int mode)
 {
 	cout<<"-R called"<<endl ;
 }
