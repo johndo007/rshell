@@ -12,8 +12,8 @@
 #include <unistd.h>
 #include <grp.h>
 #include <pwd.h>
-#include <cstdint>
-
+#include <stdint.h>
+#include <stdio.h>
 using namespace std;
 
 //defining bit values
@@ -54,14 +54,14 @@ void get_perms(mode_t mode, char buf[])
 	if(S_ISDIR(mode)) ftype = 'd';
 	sprintf(buf, "%c%c%c%c%c%c%c%c%c%c",ftype,
 			mode & S_IRUSR ? 'r' : '-',
-			mode & S_IWUSR ? 'r' : '-',
-			mode & S_IXUSR ? 'r' : '-',
+			mode & S_IWUSR ? 'w' : '-',
+			mode & S_IXUSR ? 'x' : '-',
 			mode & S_IRGRP ? 'r' : '-',
-			mode & S_IWGRP ? 'r' : '-',
-			mode & S_IXGRP ? 'r' : '-',
+			mode & S_IWGRP ? 'w' : '-',
+			mode & S_IXGRP ? 'x' : '-',
 			mode & S_IROTH ? 'r' : '-',
-			mode & S_IWOTH ? 'r' : '-',
-			mode & S_IXOTH ? 'r' : '-');
+			mode & S_IWOTH ? 'w' : '-',
+			mode & S_IXOTH ? 'x' : '-');
 
 }
 
@@ -97,7 +97,7 @@ string make_string(string &path, string &fname, string &output, int &mode)
     get_perms(statBuf.st_mode, fstatus);
     output = fstatus;
 	output +=' ';
-    sprintf(tmp,"%d", statBuf.st_nlink);
+    sprintf(tmp,"%ld", statBuf.st_nlink);
     output += tmp;
 	output += ' ';
 	//get owner's name
@@ -110,12 +110,12 @@ string make_string(string &path, string &fname, string &output, int &mode)
 	//get groups's name
     if((grp=getgrgid(statBuf.st_gid))!=NULL)
         sprintf(tmp,"%-s", grp->gr_name);
-    else
-        sprintf(tmp,"%-d", grp->gr_name);
+	else
+        sprintf(tmp,"%-d", statBuf.st_gid);
     output += tmp;
 	output += ' ';
 	//get file size
-    sprintf(tmp, "%8jd", (intmax_t)statBuf.st_size);
+    sprintf(tmp, "%11ld", (long int)statBuf.st_size);
     output += tmp;
 	output += ' ';
 	//get Month:Day:Hour::Minute
@@ -138,6 +138,7 @@ string make_string(string &path, string &fname, string &output, int &mode)
 	}
 	sprintf(tmp, "%s%s%s", color_fmt, fname.c_str(), default_fmt);
 	output += tmp;
+	return output;
 }
 
 void recurdir3(string &path, vector<string> &v, int &mode)
@@ -146,7 +147,7 @@ void recurdir3(string &path, vector<string> &v, int &mode)
 	string temp_path;
 	vector<string>tempv;
 
-	for(int x=0;x<v.size();x++)
+	for(unsigned int x=0;x<v.size();x++)
     {
         if(v[x]==".")continue;
         if(v[x]!="..")
@@ -155,14 +156,32 @@ void recurdir3(string &path, vector<string> &v, int &mode)
             temp_path+='/';
             temp_path+=v[x];
 
-            if(dir_ptr=opendir(temp_path.c_str()))
+            if((dir_ptr= opendir(temp_path.c_str() ) ))
             {
 
-                tempv=read_directory(temp_path,mode);
+                tempv=read_filenames(temp_path);
                 //display content
-                if
+                for(unsigned int i = 0; i<temp_path;i++)
+				{
+					if(mode & DIR_ALL)
+					{
+						//print all
+						cout<< temp_path[i]<<" ";
+					}
+					else if(mode & DIR_LONG)
+					{
+						//long r
+					}
+					else
+					{
+						if(temp_path[i][0]!='.')
+							cout<<temp_path[i]<< " ";
+					}
 
-                if(temp.size()>0)
+				} 
+				cout<<endl;
+
+                if(temp_path.size()>0)
                 {
                     recurdir3(temp_path,tempv,mode);
                 }
@@ -186,10 +205,9 @@ void print_ALL(string &path, vector<string> &v, int &mode)
 	else if(mode & DIR_LONG)
 	{
 		//print  -al
-		for(int x = 0; x <v.size();x++)
+		for(unsigned int x = 0; x <v.size();x++)
         {
-            string output;
-            make_string(path, v[x], output, mode);
+            string output= make_string(path, v[x], output, mode);
             cout<<output<<endl;
         }
 
@@ -202,7 +220,7 @@ void print_ALL(string &path, vector<string> &v, int &mode)
 	{
 		//cout<<"Size of v: "<<v.size()<<endl;
 		//default print -a
-		for(int i =0; i<v.size();i++)
+		for(unsigned int i =0; i<v.size();i++)
 		{
 			cout<<v[i]<<"  ";
 		}
@@ -215,12 +233,11 @@ void print_ALL(string &path, vector<string> &v, int &mode)
 void print_LONG(string &path, vector<string> &v, int &mode)
 {
 	cout<<"-l called"<<endl ;
-	for(int x = 0; x <v.size();x++)
+	for(unsigned  int x = 0; x <v.size();x++)
 	{
         if(v[x][0] !='.')   //no hidden files
         {
-            string output;
-            make_string(path, v[x], output, mode);
+            string output = make_string(path, v[x], output, mode);
             cout<<output;
         }
     }
@@ -317,7 +334,7 @@ void ls_cmd(char** argv)
 		    //path = argv[0];
 			v = read_filenames(path);
 
-			for(int i = 0; i<v.size();i++)
+			for(unsigned int i = 0; i<v.size();i++)
 			{
 				if(v[i][0]!= '.') cout<<v[i]<<' ';
 			}
