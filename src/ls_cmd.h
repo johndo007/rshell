@@ -62,7 +62,7 @@ void get_perms(mode_t mode, char buf[])
 			mode & S_IROTH ? 'r' : '-',
 			mode & S_IWOTH ? 'r' : '-',
 			mode & S_IXOTH ? 'r' : '-');
-	
+
 }
 
 void get_color_code (mode_t st_mode, char *color_fmt)
@@ -140,6 +140,42 @@ string make_string(string &path, string &fname, string &output, int &mode)
 	output += tmp;
 }
 
+void recurdir3(string &path, vector<string> &v, int &mode)
+{
+    DIR* dir_ptr;
+	string temp_path;
+	vector<string>tempv;
+
+	for(int x=0;x<v.size();x++)
+    {
+        if(v[x]==".")continue;
+        if(v[x]!="..")
+        {
+            temp_path=path;
+            temp_path+='/';
+            temp_path+=v[x];
+
+            if(dir_ptr=opendir(temp_path.c_str()))
+            {
+
+                tempv=read_directory(temp_path,mode);
+                //display content
+                if
+
+                if(temp.size()>0)
+                {
+                    recurdir3(temp_path,tempv,mode);
+                }
+
+            }
+
+        }
+
+    }
+
+}
+
+
 void print_ALL(string &path, vector<string> &v, int &mode)
 {
 	//cout<<"Print all"<<endl;
@@ -203,7 +239,7 @@ void ls_cmd(char** argv)
 	int x = 1;
 	int mode = 0;
 	string path = ".";
-	vector<string> v; 
+	vector<string> v;
 	bool flag = true;
 	//vector<bool> flag;
 	//for(int i = 0; i < 3;i++)  flag.push_back(false);
@@ -257,13 +293,13 @@ void ls_cmd(char** argv)
 			}*/
 
 			if((mode & DIR_ALL)&&(flag==true))
-			{ 
+			{
 				print_ALL(path,v,mode);	//if -a is true
 				flag = false;
 			}
 
-			if((mode & DIR_LONG)&&(flag==true)) 
-			{ 
+			if((mode & DIR_LONG)&&(flag==true))
+			{
 				print_LONG(path,v,mode);	//if -l is true
 				flag = false;
 			}
@@ -280,7 +316,7 @@ void ls_cmd(char** argv)
 			//assume path name
 		    //path = argv[0];
 			v = read_filenames(path);
-			
+
 			for(int i = 0; i<v.size();i++)
 			{
 				if(v[i][0]!= '.') cout<<v[i]<<' ';
