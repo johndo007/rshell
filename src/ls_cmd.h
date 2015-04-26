@@ -44,6 +44,42 @@ vector<string> read_filenames(string &path)
 	return filenames;
 
 }
+void make_string(string &path, string &fname, string &output)
+{
+    string fullpath;
+    fullpath = path;
+    fullpath += '/';
+    fullpath += fname;
+    output = ""; //clear
+
+    if(stat(full.c_str(), &statBuf)==-1)    return output;
+
+    get_perms(statBuf.st_mode, fstatus);
+    output = fstatus;
+    sprintf(tmp,"%d", statBuf.st_link);
+    output += tmp;
+
+    if((pwd=getwuid(statBuf.st_uid))!=NULL)
+        sprintf(tmp,"%-s", pwd->pw_name);
+    else
+        sprintf(tmp,"%-d", statBuf.st_uid);
+    output += tmp;  //-perm-#-user-user
+
+    if((grp=getgrid(statBuf.st_gid))!=NULL)
+        sprintf(tmp,"%-s", grp->gr_name);
+    else
+        sprintf(tmp,"%-d", grp->gr_name);
+    output += tmp;
+
+    sprintf(tmp, "%7jd", (int max_t)statBuf.st_size);
+    output += tmp;
+
+    char datestring[256];
+    char fmt = "%b %d %H: %M";
+    tm = localtime(&statBuf, st_mtime);
+    strftime(datestring, sizeof(datestring),fmt,tm);
+    output += datestring;
+}
 
 void print_ALL(string &path, vector<string> &v, int &mode)
 {
@@ -55,6 +91,12 @@ void print_ALL(string &path, vector<string> &v, int &mode)
 	else if(mode & DIR_LONG)
 	{
 		//print  -al
+		for(int x = 0; x <v.size();x++)
+        {
+            string ouput;
+            make_string(path, v[x], output, mode);
+            cout<<output;
+        }
 
 	}
 	else if(mode & DIR_R)
@@ -68,7 +110,7 @@ void print_ALL(string &path, vector<string> &v, int &mode)
 		for(int i =0; i<v.size();i++)
 		{
 			cout<<v[i]<<"  ";
-		} 
+		}
 		cout<<endl;
 	}
 
@@ -78,6 +120,15 @@ void print_ALL(string &path, vector<string> &v, int &mode)
 void print_LONG(string &path, vector<string> &v, int &mode)
 {
 	cout<<"-l called"<<endl ;
+	for(int x = 0; x <v.size();x++)
+	{
+        if(v[x][0] !='.')   //no hidden files
+        {
+            string ouput;
+            make_string(path, v[x], output, mode);
+            cout<<output;
+        }
+    }
 }
 
 void print_R(string &path, vector<string> &v, int &mode)
@@ -104,7 +155,7 @@ void ls_cmd(char** argv)
 
 	for(;argv[x]!=NULL ;x++ )
 	{
-		
+
 		//cout<<"ls_cmd1  was called"<<endl;
 		if(argv[x][0]!='-' && x!=0)
 		{
