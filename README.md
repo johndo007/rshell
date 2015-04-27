@@ -27,13 +27,14 @@ $ bin/rshell
 3.Execute the commands (1.15)
 - Memory allocation handled before and after execution
 
-4.Ls Command
-- '-a'
-- '-l'
-- '-R'
+4.Ls Command(1.29)  
+- '-a': display the all contents of directory 
+- '-l': lists out detailed info~ need to fix formating issues with size  
+- '-R': does recursive calls but displays them awkwardly 
 
 ## Known Bugs, Issues, Limitations
--Rshell cannot use 'cd' command
--Tabs are not treated as spaces and instead are treated as a character.
--Arrow keys are treated as characters and will not cycle through previous commands.
--File redirection('<' or '>' ) is not implemented
+-Rshell cannot use 'cd' command  
+-Tabs are not treated as spaces and instead are treated as a character. 
+-Arrow keys are treated as characters.They will not cycle through previous commands and while move the cursor through the consol. 
+-File redirection('<' or '>' ) is not implemented  
+-'-R' has formating errors when outputing. 
