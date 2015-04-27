@@ -95,38 +95,40 @@ string make_string(string &path, string &fname, string &output, int &mode)
     output = ""; //clear
 
     if(stat(fullpath.c_str(), &statBuf)==-1)    return output;
-
-    get_perms(statBuf.st_mode, fstatus);
-    output = fstatus;
-	output +=' ';
-    sprintf(tmp,"%ld", statBuf.st_nlink);
-    output += tmp;
-	output += ' ';
-	//get owner's name
-    if((pwd=getpwuid(statBuf.st_uid) )!=NULL)
-        sprintf(tmp,"%-s", pwd->pw_name);
-    else
-        sprintf(tmp,"%-d", statBuf.st_uid);
-    output += tmp;  //-perm-#-user-user
-	output += ' ';
-	//get groups's name
-    if((grp=getgrgid(statBuf.st_gid))!=NULL)
-        sprintf(tmp,"%-s", grp->gr_name);
-	else
-        sprintf(tmp,"%-d", statBuf.st_gid);
-    output += tmp;
-	output += ' ';
-	//get file size
-    sprintf(tmp, "%11ld", (long int)statBuf.st_size);
-    output += tmp;
-	output += ' ';
-	//get Month:Day:Hour::Minute
-    char datestring[256];
-    char fmt[] = "%b %d %H: %M";
-    tm = localtime(&statBuf.st_mtime);
-    strftime(datestring, sizeof(datestring),fmt,tm);
-    output += datestring;
-	output += ' ';
+	if(mode & DIR_LONG)
+	{
+		get_perms(statBuf.st_mode, fstatus);
+		output = fstatus;
+		output +=' ';
+		sprintf(tmp,"%ld", statBuf.st_nlink);
+		output += tmp;
+		output += ' ';
+		//get owner's name
+		if((pwd=getpwuid(statBuf.st_uid) )!=NULL)
+			sprintf(tmp,"%-s", pwd->pw_name);
+		else
+			sprintf(tmp,"%-d", statBuf.st_uid);
+		output += tmp;  //-perm-#-user-user
+		output += ' ';
+		//get groups's name
+		if((grp=getgrgid(statBuf.st_gid))!=NULL)
+			sprintf(tmp,"%-s", grp->gr_name);
+		else
+			sprintf(tmp,"%-d", statBuf.st_gid);
+		output += tmp;
+		output += ' ';
+		//get file size
+		sprintf(tmp, "%11ld", (long int)statBuf.st_size);
+		output += tmp;
+		output += ' ';
+		//get Month:Day:Hour::Minute
+		char datestring[256];
+		char fmt[] = "%b %d %H: %M";
+		tm = localtime(&statBuf.st_mtime);
+		strftime(datestring, sizeof(datestring),fmt,tm);
+		output += datestring;
+		output += ' ';
+	}
 	char color_fmt[32];
 	color_fmt[0] = 0;
 	char default_fmt[]= "\x1b[39;49m";
@@ -158,12 +160,12 @@ void recurdir3(string &path, vector<string> &v, int mode)
             temp_path+='/';
             temp_path+=v[x];
 
+			cout<<temp_path<<":"<<endl;
             if((dir_ptr= opendir(temp_path.c_str() ) ))
             {
 
                 tempv=read_filenames(temp_path);
                 //display content
-
 
                 if(temp_path.size()>0)
                 {
@@ -181,12 +183,7 @@ void recurdir3(string &path, vector<string> &v, int mode)
 
 void print_ALL(string &path, vector<string> &v, int mode)
 {
-	//cout<<"Print all"<<endl;
-	if((mode & DIR_LONG) && (mode & DIR_R))
-	{
-		//print -alR
-	}
-	else if(mode & DIR_LONG)
+	if((mode & DIR_ALL) && (mode & DIR_LONG))
 	{
 		//print  -al
 		for(unsigned int x = 0; x <v.size();x++)
@@ -196,32 +193,41 @@ void print_ALL(string &path, vector<string> &v, int mode)
         }
 
 	}
-	else if(mode & DIR_R)
+	
+	else if(mode & DIR_ALL)
 	{
-		//print -aR
-	}
-	else
-	{
-		//cout<<"Size of v: "<<v.size()<<endl;
-		//default print -a
-		for(unsigned int i =0; i<v.size();i++)
+		//-a
+		for(unsigned int i = 0; i<v.size();i++)
 		{
-		    if(mode&DIR_ALL)
-            {
-                string output= make_string(path, v[x], output, mode);
-                cout<<output<<"  ";
-            }
-            else
-            {
+			string output =  make_string(path, v[i], output, mode);
+			cout<< output << " ";
+		} 
+		cout<<endl;
+	}
 
-                if(v[i][0]!='.')
-                {
-                    string output= make_string(path, v[x], output, mode);
-                    cout<<output<<"  ";
-                }
-            }
-
-			//cout<<v[i]<<"  ";
+	else if(mode & DIR_LONG)
+	{
+		//-l
+		for(unsigned int i = 0; i<v.size();i++)
+		{
+			if(v[i][0]!='.')
+			{
+				string output =  make_string(path, v[i], output, mode);
+				cout<< output <<endl;
+			}
+		}
+		
+	}
+	
+	else	//default
+	{
+		for(unsigned int i = 0; i <v.size();i++)
+		{
+			if(v[i][0]!='.')
+			{
+				string output =  make_string(path, v[i], output, mode);
+				cout<< output << " ";
+			}
 		}
 		cout<<endl;
 	}
@@ -229,40 +235,12 @@ void print_ALL(string &path, vector<string> &v, int mode)
 
 }
 
-void print_LONG(string &path, vector<string> &v, int mode)
-{
-	cout<<"-l called"<<endl ;
-	for(unsigned  int x = 0; x <v.size();x++)
-	{
-        if(v[x][0] !='.')   //no hidden files
-        {
-            string output = make_string(path, v[x], output, mode);
-            cout<<output;
-        }
-    }
-}
-
-void print_R(string &path, vector<string> &v, int mode)
-{
-	cout<<"-R called"<<endl ;
-}
-
 void ls_cmd(char** argv)
 {
-	//cout<<"ls_cmd  was called"<<endl;
-	//assume ls was called
-	//DIR *mydir;
 	int x = 1;
 	int mode = 0;
 	string path = ".";
 	vector<string> v;
-	bool flag = true;
-	//vector<bool> flag;
-	//for(int i = 0; i < 3;i++)  flag.push_back(false);
-	/*for(int i = 0 ;argv[i]!=NULL ;i++)
-	{
-		cout<<argv[i]<<endl;
-	}*/
 
 
 	for(;argv[x]!=NULL ;x++ )
@@ -299,48 +277,14 @@ void ls_cmd(char** argv)
 
 				}
 			}
-
-			//push parameters into ls helper  read function
-			v = read_filenames(path);
-			//cout<<"ls_cmd read paths  was called"<<endl;
-			/*for(int i = 0; i< v.size();i++)
-			{
-				cout<<v[i]<<endl;
-			}*/
-
-			if((mode & DIR_ALL)&&(flag==true))
-			{
-				print_ALL(path,v,mode);	//if -a is true
-				flag = false;
-			}
-
-			if((mode & DIR_LONG)&&(flag==true))
-			{
-				print_LONG(path,v,mode);	//if -l is true
-				flag = false;
-			}
-
-			if((mode & DIR_R)&&(flag==true))
-			{
-				print_R(path,v,mode);	//if -R is true
-				flag = false;
-			}
-
 		}
-		else
-		{
-			//assume path name
-		    //path = argv[0];
-			v = read_filenames(path);
-
-			for(unsigned int i = 0; i<v.size();i++)
-			{
-				if(v[i][0]!= '.') cout<<v[i]<<' ';
-			}
-			cout<<endl;
-		}
-
 	}
+	//push parameters into ls helper  read function
+	v = read_filenames(path);
+	if(mode & DIR_R)
+		recurdir3(path,v,mode);
+	else
+		print_ALL(path,v,mode);	
 }
 
 
