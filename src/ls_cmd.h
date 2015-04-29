@@ -1,19 +1,24 @@
 #ifndef LS_CMD_H__
 #define LS_CMD_H__
 
+#include <iostream>
 #include <vector>
 #include <dirent.h>
 #include <cstring>
 #include <string.h>
-#include <iostream>
 #include <algorithm>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <time.h>
+#include <locale.h>
+#include <langinfo.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/ioctl.h>	//Terminal width info
+
 using namespace std;
 
 //defining bit values
@@ -75,6 +80,25 @@ void get_color_code (mode_t st_mode, char *color_fmt)
 	{
 		sprintf(color_fmt, "\x1b[32m");
 	}
+}
+
+
+bool stringCompare( const string &left, const string &right )
+{
+   for( string::const_iterator lit = left.begin(), rit = right.begin(); lit != left.end() && rit != right.end(); ++lit, ++rit )
+      if( tolower( *lit ) < tolower( *rit ) )
+      {
+         return true;
+	 }
+      else if( tolower( *lit ) > tolower( *rit ) )
+       {  
+		   return false;
+	   }
+   if( left.size() < right.size() )
+      {
+		  return true;
+	  }
+   return false;
 }
 
 void print_ALL(string &path, vector<string> &v, int mode);
@@ -179,7 +203,6 @@ void recurdir3(string &path, vector<string> &v, int mode)
     }
 
 }
-
 
 void print_ALL(string &path, vector<string> &v, int mode)
 {
