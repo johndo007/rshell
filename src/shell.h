@@ -22,15 +22,24 @@ using namespace std;
 
     void prompt()   //get user info ... DONE
     {
-        if (getlogin() != NULL) //only runs if there is a login user
+    	string user = getlogin();
+        if (user != NULL) //only runs if there is a login user
         {
-            cout << getlogin() << "@"; //display login and @
+            cout << user << "@"; //display login and @
+        }
+        else if( user == NULL)
+        {
+        	perror("getlogin() ");
         }
         char hostname[127] = {0}; //max bytes is 128 in hostname
         if (gethostname(hostname, 255) != -1) //if there is a hostname
         {
-            gethostname(hostname, 255); //put hostname -> hostname
+            //gethostname(hostname, 255); //put hostname -> hostname
             cout << hostname << " "; //cout host name
+        }
+        else
+        {
+        	perror("gethostname() ")
         }
 
         cout << "$" << " "; //if no user info, then deflaut '$'
