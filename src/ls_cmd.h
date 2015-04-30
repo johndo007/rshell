@@ -204,6 +204,49 @@ void recurdir3(string &path, vector<string> &v, int mode)
 
 }
 
+void print_dir_both(string path, vector<string>vx, int mode)
+{
+	unsigned int x, l;
+	unsigned long blocks = 0;
+	string output;
+	char filelenght_fmt[16];
+	char link_fmt[16];
+	vector<string>v_sub;
+	bool Free_fmt = false; //true 2 spaces between filename
+	unsigned int maxLink=1;
+	int wordsPerLine = 2;
+	int ScreenWidth=80;
+	int wordcount=0;
+	for(x=0;x<vx.size();x++)
+	{
+		v.push_back(vx[x]);
+	}
+	if((mode & DIR_LONG) != DIR_LONG)	//while not -l
+	{
+		struct winsize w;
+		ioctl(0,TIOCGWINSZ, &w);
+		if(w.ws_col>0) ScreenWidth=w.ws_col;
+		for(x=0;x<v.size();x++)
+		{
+			if(v[x].length > maxWlen) maxWlen=v[x].legth();
+		}
+		maxWlen+=2;
+		wordsPerLine=ScreenWidth/maxWlen;
+		if(v.size()<9)	//only 8 filenames case
+		{
+			unsigned int len = 0;
+			for(x=0; x<v.size();x++) len+=(v[x].length()+2)
+			{
+				if(len<=ScreenWidth)
+				{
+					Free_fmt=true;
+					wordsPerLine=8;
+				}
+			}
+		}
+	}
+}
+
 void print_ALL(string &path, vector<string> &v, int mode)
 {
 	if((mode & DIR_ALL) && (mode & DIR_LONG))
