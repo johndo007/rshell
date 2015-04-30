@@ -22,27 +22,15 @@ using namespace std;
 
     void prompt()   //get user info ... DONE
     {
-    	string user = getlogin();
-        if (user != NULL) //only runs if there is a login user
-        {
-            cout << user << "@"; //display login and @
-        }
-        else if( user == NULL)
-        {
-        	perror("getlogin() ");
-        }
-        char hostname[127] = {0}; //max bytes is 128 in hostname
-        if (gethostname(hostname, 255) != -1) //if there is a hostname
-        {
-            //gethostname(hostname, 255); //put hostname -> hostname
-            cout << hostname << " "; //cout host name
-        }
-        else
-        {
-        	perror("gethostname() ")
-        }
-
-        cout << "$" << " "; //if no user info, then deflaut '$'
+		char* login = getlogin();
+		char hostname[256];
+		if (login == NULL) perror("login");
+		if (-1 == gethostname(hostname, 256)) perror("hostname");
+        
+		printf("%s", login);
+		printf("%s", "@");
+		printf("%s ", hostname);
+		printf("%s ", "$");
     }
 
     void list_cmd(string& input, vector<string>&words,int& totalWordCount) //converts string into individal commands
@@ -259,9 +247,9 @@ using namespace std;
                         if(success <= -1 ) // nope, it failed ... failed on command
                         {
 
-                            // perror(cmdlist[0]);
+                            perror(cmdlist[0]);
                             //exit(1);
-                            cerr<<"CMD Error:  "<<cmdlist[0]<<endl;
+                            //cerr<<"CMD Error:  "<<cmdlist[0]<<endl;
 							int x;
                             index_else =-1;
                             if(words[i]== "&&")
@@ -296,7 +284,10 @@ using namespace std;
 
                     else // parent process---wait until the child is done
                     {
-                        waitpid(-1, &status, 0);
+                        if(waitpid(-1, &status, 0)==-1)
+						{
+							perror("waitpid" );
+						}
                         //if(fwmode>0)close(fw);
 
                         if(words[i] == "&&" && (status > 0))	//failed on prameter
