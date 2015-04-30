@@ -15,7 +15,7 @@ int main(int argc, char** argv)
 	{
         prompt(); //Setup user prompt
 
-	getline (cin, input);
+	getline (cin, input);	//get user input
 
         ///break up commands into vector<string>
         list_cmd(input, words,wordcnt);
