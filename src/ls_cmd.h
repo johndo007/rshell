@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>	//Terminal width info
+#include <errno.h>
 
 using namespace std;
 
@@ -28,18 +29,14 @@ using namespace std;
 
 vector<string> read_filenames(string &path)
 {
-	//cout<<"running readfile names"<<endl;
-	//cout<<"Path: " <<path<<endl;
 	DIR*  dir_ptr = opendir(path.c_str());
 	vector<string> filenames;
 	dirent* dir_en;
 	filenames.clear();
 	if(dir_ptr)
 	{
-		//cout<<"open dir"<<endl;
 		while(true)
 		{
-			//int errno = 0;
 			dir_en = readdir(dir_ptr);
 			if(dir_en == NULL) break;
 			{
@@ -109,7 +106,6 @@ vector <string> read_directory( const string& path,int mode )
       if (dir_en == NULL) break;
       if((dir_en->d_name[0]!='.') || (mode & DIR_ALL))
       filenames.push_back( std::string( dir_en->d_name ) );
-      //cout<<"F="<<dir_en->d_name<<"  ";
       }
     closedir( dir_ptr );
     sort( filenames.begin(), filenames.end(),stringCompare );
@@ -119,7 +115,6 @@ vector <string> read_directory( const string& path,int mode )
 
 string make_string(string& path,string fname,int mode,char* link_fmt,char* filelength_fmt)
 {
-	//struct dirent  *dp;
 	struct stat     statbuf;
 	struct passwd  *pwd;
 	struct group   *grp;
@@ -202,11 +197,11 @@ void print_dir_both(string path,vector<string>vx, int mode)	//screen case
 
 	//not DIR_LONG mode
 	bool Free_fmt=false;  //true: 2 spaces between filenames
-	int wordsPerLine=2;
+	unsigned int wordsPerLine=2;
 	unsigned int linesPerDisplay=1;
 	unsigned int maxWlen=1;
-	int ScreenWidth=80;	//assume default 80 spaces available per line
-	int wordsCount=0;
+	unsigned int ScreenWidth=80;	//assume default 80 spaces available per line
+	unsigned int wordsCount=0;
 	unsigned int maxWlenB[80];	//max word length for each word per column
 
 	for(x=0;x<vx.size();x++)	//for DIR_LONG operation
@@ -500,16 +495,11 @@ void ls_cmd(char **argv)
 		{
 			if(v[i][0]=='~')	//special case
 					{
-						//home
-
-
 						tmp="/home/";
 						tmp+=getlogin();   //hostname;
 						if(v[i].length()>1)
 						tmp+=&v[i][1];
 						v[i]=tmp;
-						//cout<<"HOME="<<v[i]<<endl;
-
 
 					}
 			ppath=path;
@@ -520,7 +510,6 @@ void ls_cmd(char **argv)
 			v_sub=read_directory(ppath,mode);
 			if(v_sub.size()>0)
 			{
-				//cout<<ppath<<":"<<endl;
 				if(mode & DIR_R)print_dir3(ppath,v_sub,mode);
 				else
 				print_dir_both(ppath,v_sub,mode);
@@ -545,12 +534,7 @@ void ls_cmd(char **argv)
 		}
 	}
 
-
-
-
 	cout<<endl;
-
-
 }
 
 #endif // LS_CMD_H__
