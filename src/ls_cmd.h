@@ -82,106 +82,118 @@ void get_color_code (mode_t st_mode, char *color_fmt)
 	}
 }
 
-
-bool stringCompare( const string &left, const string &right )
-{
+bool stringCompare( const string &left, const string &right ){
    for( string::const_iterator lit = left.begin(), rit = right.begin(); lit != left.end() && rit != right.end(); ++lit, ++rit )
       if( tolower( *lit ) < tolower( *rit ) )
-      {
          return true;
-	 }
       else if( tolower( *lit ) > tolower( *rit ) )
-       {
-		   return false;
-	   }
-   if( left.size() > right.size() )
-      {
-		  return true;
-	  }
+         return false;
+   if( left.size() < right.size() ) // <
+      return true;
    return false;
 }
 
-void print_ALL(string &path, vector<string> &v, int mode);
-
-string make_string(string &path, string &fname, string &output, int &mode, char* link_fmt, char* filelength_fmt)
+vector <string> read_directory( const string& path,int mode )
 {
-    struct stat statBuf;
-	char fstatus[16];
-	char tmp[32];
-	struct passwd *pwd;
-	struct group *grp;
-	struct tm *tm;
-	char datestring[256];
-	char sperm[16];
+  vector <string> filenames;
+  dirent* dir_en;
+  DIR* dir_ptr;
+  errno = 0;
+  dir_ptr = opendir( path.empty() ? "." : path.c_str() );
+  if (dir_ptr)
+    {
+    while (true)
+      {
+      errno = 0;
+      dir_en = readdir( dir_ptr );
+      if (dir_en == NULL) break;
+      if((dir_en->d_name[0]!='.') || (mode & DIR_ALL))
+      filenames.push_back( std::string( dir_en->d_name ) );
+      //cout<<"F="<<dir_en->d_name<<"  ";
+      }
+    closedir( dir_ptr );
+    sort( filenames.begin(), filenames.end(),stringCompare );
+    }
+  return filenames;
+  }
+
+string make_string(string& path,string fname,int mode,char* link_fmt,char* filelength_fmt)
+{
+	//struct dirent  *dp;
+	struct stat     statbuf;
+	struct passwd  *pwd;
+	struct group   *grp;
+	struct tm      *tm;
+	char            datestring[256];
+	char   sperm[16];
 	string result="";
-	char tmp[32];
+	char  tmp[32];
+	// Get entry's information.
+	string ppath;
+	ppath=path;
+	ppath+='/';
+	ppath+=fname;
 
-
-	string fullpath;
-    fullpath = path;
-    fullpath += '/';
-    fullpath += fname;
-    output = ""; //clear
-
-    if(stat(fullpath.c_str(), &statBuf)==-1)    return output;
-	if(mode & DIR_LONG)
+    if (stat(ppath.c_str(), &statbuf) == -1)
+        return result;
+	if((mode & DIR_LONG)==DIR_LONG)
 	{
-		get_perms(statBuf.st_mode, fstatus);
-		output = fstatus;
-		output +=' ';
-		sprintf(tmp,link_fmt, statBuf.st_nlink);
-		output += tmp;
-		output += ' ';
-		//get owner's name
-		if((pwd=getpwuid(statBuf.st_uid) )!=NULL)
-			sprintf(tmp,"%-s", pwd->pw_name);
-		else
-			sprintf(tmp,"%-d", statBuf.st_uid);
-		output += tmp;  //-perm-#-user-user
-		output += ' ';
-		//get groups's name
-		if((grp=getgrgid(statBuf.st_gid))!=NULL)
-			sprintf(tmp,"%-s", grp->gr_name);
-		else
-			sprintf(tmp,"%-d", statBuf.st_gid);
-		output += tmp;
-		output += ' ';
-		//get file size
-		sprintf(tmp, "%11ld", (long int)statBuf.st_size);
-		output += tmp;
-		output += ' ';
-		//get Month:Day:Hour::Minute
-		char datestring[256];
-		char fmt[] = "%b %d %H: %M";
-		tm = localtime(&statBuf.st_mtime);
-		strftime(datestring, sizeof(datestring),fmt,tm);
-		output += datestring;
-		output += ' ';
+    // Print out type, permissions, and number of links.
+    get_perms(statbuf.st_mode,sperm);
+
+    result+=sperm;
+
+    sprintf(tmp,link_fmt, statbuf.st_nlink);
+	result+=tmp;
+
+    // Print out owner's name if it is found using getpwuid().
+    if ((pwd = getpwuid(statbuf.st_uid)) != NULL)
+        sprintf(tmp," %-s", pwd->pw_name);
+    else
+        sprintf(tmp," %-d", statbuf.st_uid);
+	result+=tmp;
+
+    // Print out group name if it is found using getgrgid().
+    if ((grp = getgrgid(statbuf.st_gid)) != NULL)
+        sprintf(tmp," %-s", grp->gr_name);
+    else
+        sprintf(tmp," %-d", statbuf.st_gid);
+	result+=tmp;
+
+    // Print size of file.
+    sprintf(tmp,filelength_fmt, (long int)statbuf.st_size); //intmax_t
+	result+=tmp;
+
+    tm = localtime(&statbuf.st_mtime);
+	const char fmt[]="%b %d %H:%M"; //Month Day Hour:Minute
+    // Get localized date string.
+    strftime(datestring, sizeof(datestring), fmt,tm); //nl_langinfo(D_T_FMT), tm);
+    sprintf(tmp," %s ", datestring);  //, fname.c_str());
+    result+=tmp;
 	}
+	//color the filename
 	char color_fmt[32];
-	color_fmt[0] = 0;
-	char default_fmt[]= "\x1b[39;49m";
-	if(fname[0] == '.')
-	{
-		sprintf(color_fmt,"%s", "\x1b[34;47m");
-	}
+	color_fmt[0]=0;
+	char default_fmt[]="\x1b[39;49m";
+	if(fname.at(0)=='.')
+		sprintf(color_fmt,"%s","\x1b[34;47m");
 	else
-	{
-		get_color_code(statBuf.st_mode, color_fmt);
-	}
-	sprintf(datestring, "%s%s%s ", color_fmt, fname.c_str(), default_fmt);
-	output += tmp;
-	return output;
+		get_color_code(statbuf.st_mode,color_fmt);
+
+	sprintf(tmp,"%s%s%s", color_fmt,fname.c_str(),default_fmt);
+	result+=tmp;
+
+	return result;
 }
 
-void print_dir_both(string path, vector<string>vx, int mode)
+void print_dir_both(string path,vector<string>vx, int mode)	//screen case
 {
-	unsigned int x, l;
-	unsigned long blocks = 0;
+	unsigned int x,l;
+	unsigned long blocks=0;
 	string output;
-	char filelenght_fmt[16];
+	char filelength_fmt[16];
 	char link_fmt[16];
-	vector<string>v_sub;
+	vector<string>v;
 	vector<string>v_sub;
 
 	//DIR_LONG mode
@@ -189,157 +201,111 @@ void print_dir_both(string path, vector<string>vx, int mode)
 	unsigned int maxLink=1;
 
 	//not DIR_LONG mode
-	bool Free_fmt = false; //true 2 spaces between filename
-	int wordsPerLine = 2;
+	bool Free_fmt=false;  //true: 2 spaces between filenames
+	int wordsPerLine=2;
 	unsigned int linesPerDisplay=1;
 	unsigned int maxWlen=1;
-	int ScreenWidth=80;
-	int wordcount=0;
-	unsigned int maxWlenB[80]
-	for(x=0;x<vx.size();x++)
+	int ScreenWidth=80;	//assume default 80 spaces available per line
+	int wordsCount=0;
+	unsigned int maxWlenB[80];	//max word length for each word per column
+
+	for(x=0;x<vx.size();x++)	//for DIR_LONG operation
+	v.push_back(vx[x]);
+
+	if((mode&DIR_LONG)!=DIR_LONG)	//while not -l
 	{
-		v.push_back(vx[x]);
-	}
-	if((mode & DIR_LONG) != DIR_LONG)	//while not -l
-	{
+		//get the current terminal windows size
 		struct winsize w;
-		ioctl(0,TIOCGWINSZ, &w);
-		if(w.ws_col>0) ScreenWidth=w.ws_col;
+		ioctl(0, TIOCGWINSZ, &w);
+
+		if(w.ws_col>0)ScreenWidth=w.ws_col;
+		//
 		for(x=0;x<v.size();x++)
-		{
-			if(v[x].length > maxWlen) maxWlen=v[x].legth();
-		}
+		if(v[x].length() >maxWlen)maxWlen=v[x].length();
 		maxWlen+=2;
 		wordsPerLine=ScreenWidth/maxWlen;
-		if(v.size()<9)	//only 8 filenames case
+		if(v.size()<9) //only 8 filenames
 		{
-			unsigned int len = 0;
-			for(x=0; x<v.size();x++) len+=(v[x].length()+2)
-			{
-				if(len<=ScreenWidth)
-				{
-					Free_fmt=true;
-					wordsPerLine=8;
-				}
-			}
-		}
-		else if(v.size()<8)	//only 7 filenames case
+			unsigned int len=0;
+			for(x=0;x<v.size();x++)len+=(v[x].length()+2);
+			if(len<=ScreenWidth){Free_fmt=true; wordsPerLine=8;}
+
+		}else if(v.size()<8) //only 7 filenames
 		{
-			unsigned int len = 0;
-			for(x=0; x<v.size();x++) len+=(v[x].length()+2)
-			{
-				if(len<=ScreenWidth)
-				{
-					Free_fmt=true;
-					wordsPerLine=7;
-				}
-			}
-		}
-		else if(v.size()<7)	//only 6 filenames case
+			unsigned int len=0;
+			for(x=0;x<v.size();x++)len+=(v[x].length()+2);
+			if(len<=ScreenWidth){Free_fmt=true; wordsPerLine=7;}
+
+		}else if(v.size()<7) //only 6 filenames
 		{
-			unsigned int len = 0;
-			for(x=0; x<v.size();x++) len+=(v[x].length()+2)
-			{
-				if(len<=ScreenWidth)
-				{
-					Free_fmt=true;
-					wordsPerLine=6;
-				}
-			}
-		}
-		else if(v.size()<6)	//only 5 filenames case
+			unsigned int len=0;
+			for(x=0;x<v.size();x++)len+=(v[x].length()+2);
+			if(len<=ScreenWidth){Free_fmt=true; wordsPerLine=6;}
+
+		}else if(v.size()<6) //only 5 filenames
 		{
-			unsigned int len = 0;
-			for(x=0; x<v.size();x++) len+=(v[x].length()+2)
-			{
-				if(len<=ScreenWidth)
-				{
-					Free_fmt=true;
-					wordsPerLine=5;
-				}
-			}
-		}
-		else if(v.size()<5)	//only 4 filenames case
+			unsigned int len=0;
+			for(x=0;x<v.size();x++)len+=(v[x].length()+2);
+			if(len<=ScreenWidth){Free_fmt=true; wordsPerLine=5;}
+
+		}else if(v.size()<5) //only 4 filenames
 		{
-			unsigned int len = 0;
-			for(x=0; x<v.size();x++) len+=(v[x].length()+2)
-			{
-				if(len<=ScreenWidth)
-				{
-					Free_fmt=true;
-					wordsPerLine=4;
-				}
-			}
-		}
-		else if(v.size()<4)	//only 3 filenames case
+			unsigned int len=0;
+			for(x=0;x<v.size();x++)len+=(v[x].length()+2);
+			if(len<=ScreenWidth){Free_fmt=true; wordsPerLine=4;}
+
+		}else if(v.size()<4) //only 3 filenames
 		{
-			unsigned int len = 0;
-			for(x=0; x<v.size();x++) len+=(v[x].length()+2)
-			{
-				if(len<=ScreenWidth)
-				{
-					Free_fmt=true;
-					wordsPerLine=3;
-				}
-			}
-		}
-		else if(v.size()<3)	//only 2 filenames case
+			unsigned int len=0;
+			for(x=0;x<v.size();x++)len+=(v[x].length()+2);
+			if(len<=ScreenWidth){Free_fmt=true; wordsPerLine=3;}
+
+		}else if(v.size()<3) //only 2 filenames
 		{
-			unsigned int len = 0;
-			for(x=0; x<v.size();x++) len+=(v[x].length()+2)
-			{
-				if(len<=ScreenWidth)
-				{
-					Free_fmt=true;
-					wordsPerLine=2;
-				}
-			}
+			unsigned int len=0;
+			for(x=0;x<v.size();x++)len+=(v[x].length()+2);
+			if(len<=ScreenWidth){Free_fmt=true; wordsPerLine=2;}
+
+		}else if(v.size()<2) //only 1 filenames
+		{
+			Free_fmt=true; wordsPerLine=1;
+
 		}
-		else if(v.size()<2)
-        {
-            Free_fmt=true;
-            wordsPerLine=1;
-        }
-        if(Free_fmt==false)
-        {
-            for(wordsPerLine=vx.size();wordsPerLine!=1;wordsPerLine--)
-            {
-                unsigned bIndex=0;
-                linesPerDisplay=xv.size()/wordsPerLine;
-                if(linesPerDisplay*wordsPerLine < vx.size()) linesPerDisplay++;
-                for(bIndex=0;bIndex<wordsPerLine;bIndex++)
-                {
-                    maxWlenB[bIndex]=0; //reset max=0
+		if(Free_fmt==false)
+		{
+			for(wordsPerLine=vx.size();wordsPerLine!=1;wordsPerLine--)
+			{
+				unsigned int bIndex=0;
+				linesPerDisplay=vx.size()/wordsPerLine;
+				if( linesPerDisplay*wordsPerLine < vx.size())linesPerDisplay++;
+				for(bIndex=0;bIndex<wordsPerLine;bIndex++)
+				{
+					maxWlenB[bIndex]=0; //reset max=0
 					unsigned int cnt=0;
 					for(unsigned int index=bIndex*linesPerDisplay;(index<vx.size()&&cnt<linesPerDisplay);index++,cnt++)
 					{
 						if(maxWlenB[bIndex]<vx[index].length())
 							maxWlenB[bIndex]=vx[index].length();
 					}
-					maxWlenB[bIndex]+=2;
-                }
-                unsigned int sum=0;
+					maxWlenB[bIndex]+=2; //2 spaces between filenames
+				}
+				unsigned int sum=0;
 				for(unsigned int index=0; index<wordsPerLine; index++)
 					sum+=maxWlenB[index];
-                if(sum<=ScreenWidth)
-                {
-                   if(vx.size()==4 && wordsPerLine ==3)continue;
-                   if(vx.size()==16 && wordsPerLine ==7 && linesPerDisplay==3)continue;
-                   break;
-                }
-            }
-            v.clear();
+				if(sum<=ScreenWidth)break;
 
-            for(l=0;l<linesPerDisplay;l++)
-            {
-                for(x=l;x<vx.size();x+=linesPerDisplay) v.push_back(vx[x]);
-                cout<<"File size="<<vx.sixe()<< " WPL="<<wordsPerLine<<" LPD="<<linesPerDisplay<<endl;
-            }
-        }   ///not of NOT DIR_LONG mode
+			}
+			v.clear();
 
-        string ppath;
-        struct stat statbuf;
-        string ppath;
+			for(l=0;l<linesPerDisplay;l++)
+				 for(x=l;x<vx.size();x+=linesPerDisplay) v.push_back(vx[x]);
+			cout<<"File size="<<vx.size()<<"  WPL="<<wordsPerLine<<" LPD="<<linesPerDisplay<<endl;
+		}
+
+
+	}  //end of Not DIR_LONG mode
+
+		string ppath;
 		struct stat statbuf;
 		maxFilelength=0;
 		maxLink=1;
@@ -363,41 +329,46 @@ void print_dir_both(string path, vector<string>vx, int mode)
 			}
 		}
 		unsigned long len=maxFilelength;
-		for(x=1;len!=0;x++) len/=10;
+		for(x=1;len!=0;x++)
+			len/=10;
 
-		filelenght_fmt[0]='%';
-		sprintf(&filelenght_fmt[1],"%dd",x);
+		filelength_fmt[0]='%';
+		sprintf(&filelength_fmt[1],"%dd",x);
+
 
 		unsigned linklength=maxLink;
 		for(x=0;linklength!=0;x++)
-            linklength/=10;
-        if(x==0)x=1;
-        link_fmt[0]='%';
-        sprintf(&link_fmt[1],"%dd",x);
-        if(blksize==4096)
-            blocks/=2;
-        else if(blksize==4096*4)blocks=blocks*2;
-        if(mode & DIR_LONG && v.size(>1))
-        {
-            cout<<"Total "<<blocks<<endl;
-        }
+			linklength/=10;
+		if(x==0)x=1;
+		link_fmt[0]='%';
+		sprintf(&link_fmt[1],"%dd",x);
+		if(blksize==4096)
+			blocks/=2;
+		else if(blksize==4096*4)blocks=blocks*2;
+		if(mode & DIR_LONG && v.size()>1)
+		{
+		cout<<"total "<<blocks<<endl;
+		}
 
-        ///normal without Reverse mode
-        wordcount=0;
-        for(x=0;x<v.size();x++)
-        {
-            if(((mode & DIR_ALL)==DIR_ALL) && (mode & DIR_LONG))
-                cout<<make_string(path,v[x],mode,link_fmt,filelength_fmt)<<endl;
-            else if( ((mode & DIR_LONG)==DIR_LONG)&&(v[x][0]!='.') )
-                cout<<make_string(path,v[x],mode,link_fmt,filelength_fmt)<<endl;
-            else if( (mode & DIR_ALL)==DIR_ALL )
-            {
-                output = make_string(path,v[x],mode,link_fmt,filelenght_fmt);
-                l=v[x].length();
-                int len = (int)maxWlen[wordcount]-(int)l;
-                cout<<output;
-                if(wordcount+1 !=wordsPerLine)&&(Free_fmt==false))
-                    for(int y=0;y<len;y++)cout<<" ";
+
+
+	//normal without REVERSE mode
+		wordsCount=0;
+		for(x=0;x<v.size();x++)
+		{
+		if(((mode & DIR_ALL)==DIR_ALL) && (mode & DIR_LONG))
+		cout<<make_string(path,v[x],mode,link_fmt,filelength_fmt)<<endl;
+		else if( ((mode & DIR_LONG)==DIR_LONG)&&(v[x][0]!='.') )
+		cout<<make_string(path,v[x],mode,link_fmt,filelength_fmt)<<endl;
+		else if( (mode & DIR_ALL)==DIR_ALL )
+			{
+
+				output=make_string(path,v[x],mode,link_fmt,filelength_fmt);
+				l=v[x].length();
+				int len=(int)maxWlenB[wordsCount]-(int)l;
+				cout<<output;
+				if((wordsCount+1 !=wordsPerLine) && (Free_fmt==false))  //last word before output endl
+				for(int y=0;y<len;y++)cout<<" ";
 				else if(Free_fmt==true)cout<<"  ";
 
 				wordsCount++;
@@ -406,136 +377,82 @@ void print_dir_both(string path, vector<string>vx, int mode)
 					wordsCount=0;
 					cout<<endl;
 				}
-            }
-            else if((v[x][0]!='.'))
-            {
-                output = make_string(path,v[x],mode,link_fmt,filelenght_fmt);
-                l=v[x].length();
-                int len = (int)maxWlen[wordcount]-(int)l;
-                cout<<output;
-                if(wordcount+1 !=wordsPerLine)&&(Free_fmt==false))
-                    for(int y=0;y<len;y++)cout<<" ";
+			}
+		else if( (v[x][0]!='.'))
+			{
+				output=make_string(path,v[x],mode,link_fmt,filelength_fmt);
+				l=v[x].length();
+				int len=(int)maxWlenB[wordsCount]-(int)l;
+				cout<<output;
+				if((wordsCount+1 !=wordsPerLine)&& (Free_fmt==false))  //last word before output endl
+				for(int y=0;y<len;y++)cout<<" ";
 				else if(Free_fmt==true)cout<<"  ";
-
 				wordsCount++;
 				if(wordsCount>=wordsPerLine)
 				{
 					wordsCount=0;
 					cout<<endl;
 				}
-            }
-        }
-        cout<<endl;
+			}
 
-	}
+		}
+
+	cout<<endl;
 }
 
-void recurdir3(string &path, vector<string> &v, int mode)   ///print dir recursively
+//Printing a directory recursively
+void print_dir3(string path,vector <string>v,int mode)
 {
-    DIR* dir_ptr;
-	string temp_path;
-	vector<string>tempv;
-    print_dir_both(path,v,mode);   //print current Dir filenames
+	DIR* dir_ptr;
+
+	string ppath;
+	vector<string>v_sub;
+	print_dir_both(path,v,mode);
 	for(unsigned int x=0;x<v.size();x++)
-    {
-        if(v[x]==".")continue;
-        if(v[x]!="..")
-        {
-            temp_path=path;
-            temp_path+='/';
-            temp_path+=v[x];
+			{
+				if(v[x]==".")continue;
+				if((v[x][0]=='.')&&((mode&DIR_ALL)!=DIR_ALL))continue;	//prevent endless loop
+				if(v[x]!="..")
+				{
+					ppath=path;
+					ppath+='/';
+					ppath+=v[x];
 
-			//cout<<temp_path<<":"<<endl;
-            if((dir_ptr= opendir(temp_path.c_str() ) ))
-            {
+					if((dir_ptr=opendir(ppath.c_str()))!=NULL)
+					{
 
-                tempv=read_filenames(temp_path);
-                //display content
+						v_sub=read_directory(ppath,mode);
+						if(v_sub.size()>0)	//not an empty path case
+						{
 
-                if(temp_path.size()>0)
-                {
-                    recurdir3(temp_path,tempv,mode);
-                }
+							cout<<endl<<ppath<<":"<<endl;
+							print_dir3(ppath,v_sub,mode);
 
-            }
+						}
 
-        }
+					}
 
-    }
+				}
+
+			}
 
 }
-
-void print_ALL(string &path, vector<string> &v, int mode)
-{
-	if((mode & DIR_ALL) && (mode & DIR_LONG))
-	{
-		//print  -al
-		for(unsigned int x = 0; x <v.size();x++)
-        {
-            string output= make_string(path, v[x], output, mode);
-            cout<<output<<endl;
-        }
-
-	}
-
-	else if(mode & DIR_ALL)
-	{
-		//-a
-		for(unsigned int i = 0; i<v.size();i++)
-		{
-			string output =  make_string(path, v[i], output, mode);
-			cout<< output << " ";
-		}
-		cout<<endl;
-	}
-
-	else if(mode & DIR_LONG)
-	{
-		//-l
-		for(unsigned int i = 0; i<v.size();i++)
-		{
-			if(v[i][0]!='.')
-			{
-				string output =  make_string(path, v[i], output, mode);
-				cout<< output <<endl;
-			}
-		}
-
-	}
-
-	else	//default
-	{
-		for(unsigned int i = 0; i <v.size();i++)
-		{
-			if(v[i][0]!='.')
-			{
-				string output =  make_string(path, v[i], output, mode);
-				cout<< output << " ";
-			}
-		}
-		cout<<endl;
-	}
-
-
-}
-
 void ls_cmd(char **argv)
 {
+	//DIR* dir_ptr;
 	vector<string>v;
 	vector<string>v_sub;
 	vector<string>u_sub;
-	string path=".";
+	string path=".";	//default current directory
 	string ppath="";
 	string tmp;
-
 	int mode=0;
 	int slen=0;
-	v.clear();
-
+	v.clear();	//clear filenames array
 	for(int x=0;argv[x]!=NULL;x++)
 	{
-
-		if((argv[x][0]!='-')&&(x!=0))
+		//cout<<"Argv:"<<x<<" "<<argv[x]<<endl;
+		if((argv[x][0]!='-')&&(x!=0))	//prevent option or cmd become filename/path
 		{
 			v.push_back(string(argv[x]));
 		}
@@ -560,6 +477,7 @@ void ls_cmd(char **argv)
 					case 'R':
 						mode|=DIR_R;
 						break;
+					case '#':
 					default:
 						cerr<<"ls Error: argument option#"<<endl;
 						return;
@@ -568,9 +486,6 @@ void ls_cmd(char **argv)
 		}
 
 	}
-
-
-	v=read_directory(path,mode);
 
 	if(v.size()==0)
 		{
@@ -584,22 +499,28 @@ void ls_cmd(char **argv)
 		for(unsigned int i=0;i<v.size();i++)
 		{
 			if(v[i][0]=='~')	//special case
-            {
-                tmp="/home/";
-                tmp+=getlogin();
-                if(v[i].length()>1)
-                tmp+=&v[i][1];
-                v[i]=tmp
+					{
+						//home
 
-            }
+
+						tmp="/home/";
+						tmp+=getlogin();   //hostname;
+						if(v[i].length()>1)
+						tmp+=&v[i][1];
+						v[i]=tmp;
+						//cout<<"HOME="<<v[i]<<endl;
+
+
+					}
 			ppath=path;
 			ppath+='/';
+			//ppath+= v[i];
 			ppath=v[i];
 			errno=0;
-			v_sub=read_filenames(ppath,mode);
-
+			v_sub=read_directory(ppath,mode);
 			if(v_sub.size()>0)
 			{
+				//cout<<ppath<<":"<<endl;
 				if(mode & DIR_R)print_dir3(ppath,v_sub,mode);
 				else
 				print_dir_both(ppath,v_sub,mode);
@@ -623,11 +544,14 @@ void ls_cmd(char **argv)
 			else print_dir_both(path,u_sub,mode);
 		}
 	}
+
+
+
+
 	cout<<endl;
 
 
 }
-
 
 #endif // LS_CMD_H__
 
