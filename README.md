@@ -13,7 +13,7 @@ After installation:
 $ bin/rshell
 
 ##Features
-1.Prompts for username and hostname if avialble (1.08)
+1.Prompts for username and hostname if avilable (1.31)
 - user and host are displayed if available
 - displays '$' and waits for user command and enter
 
@@ -24,17 +24,18 @@ $ bin/rshell
 
 - `;` will always execute the next command.
 
-3.Execute the commands (1.15)
-- Memory allocation handled before and after execution
+3.Shell (1.31)
+- Memory allocation handled before and after execution  
+++Added Error check messages  
 
-4.Ls Command(1.29)  
+4.Ls Command(1.36)  
 - '-a': display the all contents of directory 
-- '-l': lists out detailed info~ need to fix formating issues with size  
-- '-R': does recursive calls but displays them awkwardly 
+- '-l': lists out detailed info  
+- '-R': does recursive calls  
 
-## Known Bugs, Issues, Limitations
+## Known Bugs, Issues, Limitations 
 -Rshell cannot use 'cd' command  
 -Tabs are not treated as spaces and instead are treated as a character. 
 -Arrow keys are treated as characters.They will not cycle through previous commands and while move the cursor through the consol. 
 -File redirection('<' or '>' ) is not implemented  
--'-R' has formating errors when outputing. 
+-'~' case for ls commands has been implemented   
