@@ -27,9 +27,10 @@ using namespace std;
 #define DIR_LONG 2	//-l
 #define DIR_R	 4  //-R
 
-vector<string> read_filenames(string &path)
+vector<string> read_filenames(string &path)		//get all file names on path into a vector
 {
 	DIR*  dir_ptr = opendir(path.c_str());
+	if(dir_ptr==NULL) perror("Open dir ");
 	vector<string> filenames;
 	dirent* dir_en;
 	filenames.clear();
@@ -38,18 +39,19 @@ vector<string> read_filenames(string &path)
 		while(true)
 		{
 			dir_en = readdir(dir_ptr);
+			if(errno ==-1 ) perror("readdir ");
 			if(dir_en == NULL) break;
 			{
 				filenames.push_back(std::string(dir_en -> d_name));
 			}
 		}
-		closedir(dir_ptr);
+		if(closedir(dir_ptr)==-1) perror("closedir");
 		sort(filenames.begin(), filenames.end() );
 	}
 	return filenames;
 
 }
-void get_perms(mode_t mode, char buf[])
+void get_perms(mode_t mode, char buf[])		//build file permission string
 {
 	char ftype = '?';
 	if(S_ISREG(mode)) ftype = '-';
@@ -67,19 +69,20 @@ void get_perms(mode_t mode, char buf[])
 
 }
 
-void get_color_code (mode_t st_mode, char *color_fmt)
-{
+void get_color_code (mode_t st_mode, char *color_fmt)	//color changing
+{				
 	if(S_ISDIR(st_mode))
 	{
-		sprintf(color_fmt, "\x1b[34m");
+		sprintf(color_fmt, "\x1b[34m");		//blue
 	}
 	else if (st_mode & S_IXUSR)
 	{
-		sprintf(color_fmt, "\x1b[32m");
+		sprintf(color_fmt, "\x1b[32m");	    //green
 	}
 }
 
-bool stringCompare( const string &left, const string &right ){
+bool stringCompare( const string &left, const string &right )	//ignore case sensitive
+{
    for( string::const_iterator lit = left.begin(), rit = right.begin(); lit != left.end() && rit != right.end(); ++lit, ++rit )
       if( tolower( *lit ) < tolower( *rit ) )
          return true;
@@ -90,30 +93,33 @@ bool stringCompare( const string &left, const string &right ){
    return false;
 }
 
-vector <string> read_directory( const string& path,int mode )
+vector <string> read_directory( const string& path,int mode )	//return contents of directory based on mode
 {
   vector <string> filenames;
   dirent* dir_en;
   DIR* dir_ptr;
   errno = 0;
   dir_ptr = opendir( path.empty() ? "." : path.c_str() );
+  if(dir_ptr==NULL) perror("opendir " );
   if (dir_ptr)
     {
     while (true)
       {
       errno = 0;
       dir_en = readdir( dir_ptr );
+	  if(errno==-1) perror("readdir " );
       if (dir_en == NULL) break;
       if((dir_en->d_name[0]!='.') || (mode & DIR_ALL))
       filenames.push_back( std::string( dir_en->d_name ) );
       }
     closedir( dir_ptr );
+	if(errno ==-1) perror("closedir " );
     sort( filenames.begin(), filenames.end(),stringCompare );
     }
   return filenames;
   }
 
-string make_string(string& path,string fname,int mode,char* link_fmt,char* filelength_fmt)
+string make_string(string& path,string fname,int mode,char* link_fmt,char* filelength_fmt)	//form string for -l
 {
 	struct stat     statbuf;
 	struct passwd  *pwd;
@@ -130,7 +136,10 @@ string make_string(string& path,string fname,int mode,char* link_fmt,char* filel
 	ppath+=fname;
 
     if (stat(ppath.c_str(), &statbuf) == -1)
-        return result;
+	{
+		perror("stat ");
+		return result;
+	}
 	if((mode & DIR_LONG)==DIR_LONG)
 	{
     // Print out type, permissions, and number of links.
@@ -142,17 +151,25 @@ string make_string(string& path,string fname,int mode,char* link_fmt,char* filel
 	result+=tmp;
 
     // Print out owner's name if it is found using getpwuid().
-    if ((pwd = getpwuid(statbuf.st_uid)) != NULL)
+    pwd = getpwuid(statbuf.st_uid);
+	if (pwd != NULL)
         sprintf(tmp," %-s", pwd->pw_name);
     else
-        sprintf(tmp," %-d", statbuf.st_uid);
+	{
+		perror("getpwuid " );
+	 	sprintf(tmp," %-d", statbuf.st_uid);
+	}
 	result+=tmp;
 
     // Print out group name if it is found using getgrgid().
-    if ((grp = getgrgid(statbuf.st_gid)) != NULL)
-        sprintf(tmp," %-s", grp->gr_name);
+    grp = getgrgid(statbuf.st_gid);
+	if(grp != NULL)
+		sprintf(tmp," %-s", grp->gr_name);
     else
-        sprintf(tmp," %-d", statbuf.st_gid);
+	{
+		perror("getpwgid");
+		sprintf(tmp," %-d", statbuf.st_gid);
+	}
 	result+=tmp;
 
     // Print size of file.
@@ -162,8 +179,8 @@ string make_string(string& path,string fname,int mode,char* link_fmt,char* filel
     tm = localtime(&statbuf.st_mtime);
 	const char fmt[]="%b %d %H:%M"; //Month Day Hour:Minute
     // Get localized date string.
-    strftime(datestring, sizeof(datestring), fmt,tm); //nl_langinfo(D_T_FMT), tm);
-    sprintf(tmp," %s ", datestring);  //, fname.c_str());
+    strftime(datestring, sizeof(datestring), fmt,tm); 
+    sprintf(tmp," %s ", datestring);  
     result+=tmp;
 	}
 	//color the filename
@@ -211,7 +228,7 @@ void print_dir_both(string path,vector<string>vx, int mode)	//screen case
 	{
 		//get the current terminal windows size
 		struct winsize w;
-		ioctl(0, TIOCGWINSZ, &w);
+		if(ioctl(0, TIOCGWINSZ, &w)==-1) perror("ioctl ");
 
 		if(w.ws_col>0)ScreenWidth=w.ws_col;
 		//
@@ -322,6 +339,10 @@ void print_dir_both(string path,vector<string>vx, int mode)	//screen case
 				blksize=statbuf.st_blksize;
 				}
 			}
+			else
+			{
+				perror("stat");
+			}
 		}
 		unsigned long len=maxFilelength;
 		for(x=1;len!=0;x++)
@@ -425,6 +446,10 @@ void print_dir3(string path,vector <string>v,int mode)
 
 						}
 
+					} 
+					else
+					{
+						perror("opendir");
 					}
 
 				}
@@ -441,6 +466,7 @@ void ls_cmd(char **argv)
 	string path=".";	//default current directory
 	string ppath="";
 	string tmp;
+	char* user;
 	int mode=0;
 	int slen=0;
 	v.clear();	//clear filenames array
@@ -494,12 +520,14 @@ void ls_cmd(char **argv)
 		for(unsigned int i=0;i<v.size();i++)
 		{
 			if(v[i][0]=='~')	//special case
-					{
-						tmp="/home/";
-						tmp+=getlogin();   //hostname;
-						if(v[i].length()>1)
-						tmp+=&v[i][1];
-						v[i]=tmp;
+			{
+				tmp="/home/";
+				user=getlogin();
+				if(user==NULL) perror("getlogin");
+				tmp+= user;
+				if(v[i].length()>1)
+				tmp+=&v[i][1];
+				v[i]=tmp;
 
 					}
 			ppath=path;
@@ -522,7 +550,6 @@ void ls_cmd(char **argv)
 				{
 					cerr<<"ls: CANNOT ACCESS "<< v[i]<< ": "<<strerror(errno)<<endl;
 				}
-
 				if(errno !=2)
 				u_sub.push_back(v[i]);
 			}
