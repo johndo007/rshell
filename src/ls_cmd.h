@@ -103,7 +103,7 @@ bool stringCompare( const string &left, const string &right )
 
 void print_ALL(string &path, vector<string> &v, int mode);
 
-string make_string(string &path, string &fname, string &output, int &mode)
+string make_string(string &path, string &fname, string &output, int &mode, char* link_fmt, char* filelength_fmt)
 {
     struct stat statBuf;
 	char fstatus[16];
@@ -111,6 +111,11 @@ string make_string(string &path, string &fname, string &output, int &mode)
 	struct passwd *pwd;
 	struct group *grp;
 	struct tm *tm;
+	char datestring[256];
+	char sperm[16];
+	string result="";
+	char tmp[32];
+
 
 	string fullpath;
     fullpath = path;
@@ -124,7 +129,7 @@ string make_string(string &path, string &fname, string &output, int &mode)
 		get_perms(statBuf.st_mode, fstatus);
 		output = fstatus;
 		output +=' ';
-		sprintf(tmp,"%ld", statBuf.st_nlink);
+		sprintf(tmp,link_fmt, statBuf.st_nlink);
 		output += tmp;
 		output += ' ';
 		//get owner's name
@@ -164,44 +169,9 @@ string make_string(string &path, string &fname, string &output, int &mode)
 	{
 		get_color_code(statBuf.st_mode, color_fmt);
 	}
-	sprintf(tmp, "%s%s%s", color_fmt, fname.c_str(), default_fmt);
+	sprintf(datestring, "%s%s%s ", color_fmt, fname.c_str(), default_fmt);
 	output += tmp;
 	return output;
-}
-
-void recurdir3(string &path, vector<string> &v, int mode)
-{
-    DIR* dir_ptr;
-	string temp_path;
-	vector<string>tempv;
-    print_ALL(path,v,mode);   //print current Dir filenames
-	for(unsigned int x=0;x<v.size();x++)
-    {
-        if(v[x]==".")continue;
-        if(v[x]!="..")
-        {
-            temp_path=path;
-            temp_path+='/';
-            temp_path+=v[x];
-
-			cout<<temp_path<<":"<<endl;
-            if((dir_ptr= opendir(temp_path.c_str() ) ))
-            {
-
-                tempv=read_filenames(temp_path);
-                //display content
-
-                if(temp_path.size()>0)
-                {
-                    recurdir3(temp_path,tempv,mode);
-                }
-
-            }
-
-        }
-
-    }
-
 }
 
 void print_dir_both(string path, vector<string>vx, int mode)
@@ -212,11 +182,20 @@ void print_dir_both(string path, vector<string>vx, int mode)
 	char filelenght_fmt[16];
 	char link_fmt[16];
 	vector<string>v_sub;
-	bool Free_fmt = false; //true 2 spaces between filename
+	vector<string>v_sub;
+
+	//DIR_LONG mode
+	long maxFilelength=0;
 	unsigned int maxLink=1;
+
+	//not DIR_LONG mode
+	bool Free_fmt = false; //true 2 spaces between filename
 	int wordsPerLine = 2;
+	unsigned int linesPerDisplay=1;
+	unsigned int maxWlen=1;
 	int ScreenWidth=80;
 	int wordcount=0;
+	unsigned int maxWlenB[80]
 	for(x=0;x<vx.size();x++)
 	{
 		v.push_back(vx[x]);
@@ -316,11 +295,174 @@ void print_dir_both(string path, vector<string>vx, int mode)
 				}
 			}
 		}
-		if(wordsPerLine<=2 && visize()>3 && Free_fmt==false)
+		else if(v.size()<2)
         {
+            Free_fmt=true;
+            wordsPerLine=1;
+        }
+        if(Free_fmt==false)
+        {
+            for(wordsPerLine=vx.size();wordsPerLine!=1;wordsPerLine--)
+            {
+                unsigned bIndex=0;
+                linesPerDisplay=xv.size()/wordsPerLine;
+                if(linesPerDisplay*wordsPerLine < vx.size()) linesPerDisplay++;
+                for(bIndex=0;bIndex<wordsPerLine;bIndex++)
+                {
+                    maxWlenB[bIndex]=0; //reset max=0
+					unsigned int cnt=0;
+					for(unsigned int index=bIndex*linesPerDisplay;(index<vx.size()&&cnt<linesPerDisplay);index++,cnt++)
+					{
+						if(maxWlenB[bIndex]<vx[index].length())
+							maxWlenB[bIndex]=vx[index].length();
+					}
+					maxWlenB[bIndex]+=2;
+                }
+                unsigned int sum=0;
+				for(unsigned int index=0; index<wordsPerLine; index++)
+					sum+=maxWlenB[index];
+                if(sum<=ScreenWidth)
+                {
+                   if(vx.size()==4 && wordsPerLine ==3)continue;
+                   if(vx.size()==16 && wordsPerLine ==7 && linesPerDisplay==3)continue;
+                   break;
+                }
+            }
+            v.clear();
+
+            for(l=0;l<linesPerDisplay;l++)
+            {
+                for(x=l;x<vx.size();x+=linesPerDisplay) v.push_back(vx[x]);
+                cout<<"File size="<<vx.sixe()<< " WPL="<<wordsPerLine<<" LPD="<<linesPerDisplay<<endl;
+            }
+        }   ///not of NOT DIR_LONG mode
+
+        string ppath;
+        struct stat statbuf;
+        string ppath;
+		struct stat statbuf;
+		maxFilelength=0;
+		maxLink=1;
+		long blksize=0;
+		for(x=0;x<v.size();x++)
+		{
+			ppath=path;
+			ppath+='/';
+			ppath+=v[x];
+
+			if (stat(ppath.c_str(), &statbuf) != -1)
+			{
+				if((v[x][0]!='.') || (mode & DIR_ALL))
+				{
+				if(statbuf.st_size>maxFilelength)
+				maxFilelength=statbuf.st_size;
+				if(statbuf.st_nlink>maxLink)maxLink=statbuf.st_nlink;
+				blocks+=statbuf.st_blocks;
+				blksize=statbuf.st_blksize;
+				}
+			}
+		}
+		unsigned long len=maxFilelength;
+		for(x=1;len!=0;x++) len/=10;
+
+		filelenght_fmt[0]='%';
+		sprintf(&filelenght_fmt[1],"%dd",x);
+
+		unsigned linklength=maxLink;
+		for(x=0;linklength!=0;x++)
+            linklength/=10;
+        if(x==0)x=1;
+        link_fmt[0]='%';
+        sprintf(&link_fmt[1],"%dd",x);
+        if(blksize==4096)
+            blocks/=2;
+        else if(blksize==4096*4)blocks=blocks*2;
+        if(mode & DIR_LONG && v.size(>1))
+        {
+            cout<<"Total "<<blocks<<endl;
+        }
+
+        ///normal without Reverse mode
+        wordcount=0;
+        for(x=0;x<v.size();x++)
+        {
+            if(((mode & DIR_ALL)==DIR_ALL) && (mode & DIR_LONG))
+                cout<<make_string(path,v[x],mode,link_fmt,filelength_fmt)<<endl;
+            else if( ((mode & DIR_LONG)==DIR_LONG)&&(v[x][0]!='.') )
+                cout<<make_string(path,v[x],mode,link_fmt,filelength_fmt)<<endl;
+            else if( (mode & DIR_ALL)==DIR_ALL )
+            {
+                output = make_string(path,v[x],mode,link_fmt,filelenght_fmt);
+                l=v[x].length();
+                int len = (int)maxWlen[wordcount]-(int)l;
+                cout<<output;
+                if(wordcount+1 !=wordsPerLine)&&(Free_fmt==false))
+                    for(int y=0;y<len;y++)cout<<" ";
+				else if(Free_fmt==true)cout<<"  ";
+
+				wordsCount++;
+				if(wordsCount>=wordsPerLine)
+				{
+					wordsCount=0;
+					cout<<endl;
+				}
+            }
+            else if((v[x][0]!='.'))
+            {
+                output = make_string(path,v[x],mode,link_fmt,filelenght_fmt);
+                l=v[x].length();
+                int len = (int)maxWlen[wordcount]-(int)l;
+                cout<<output;
+                if(wordcount+1 !=wordsPerLine)&&(Free_fmt==false))
+                    for(int y=0;y<len;y++)cout<<" ";
+				else if(Free_fmt==true)cout<<"  ";
+
+				wordsCount++;
+				if(wordsCount>=wordsPerLine)
+				{
+					wordsCount=0;
+					cout<<endl;
+				}
+            }
+        }
+        cout<<endl;
+
+	}
+}
+
+void recurdir3(string &path, vector<string> &v, int mode)   ///print dir recursively
+{
+    DIR* dir_ptr;
+	string temp_path;
+	vector<string>tempv;
+    print_dir_both(path,v,mode);   //print current Dir filenames
+	for(unsigned int x=0;x<v.size();x++)
+    {
+        if(v[x]==".")continue;
+        if(v[x]!="..")
+        {
+            temp_path=path;
+            temp_path+='/';
+            temp_path+=v[x];
+
+			//cout<<temp_path<<":"<<endl;
+            if((dir_ptr= opendir(temp_path.c_str() ) ))
+            {
+
+                tempv=read_filenames(temp_path);
+                //display content
+
+                if(temp_path.size()>0)
+                {
+                    recurdir3(temp_path,tempv,mode);
+                }
+
+            }
 
         }
-	}
+
+    }
+
 }
 
 void print_ALL(string &path, vector<string> &v, int mode)
@@ -377,56 +519,113 @@ void print_ALL(string &path, vector<string> &v, int mode)
 
 }
 
-void ls_cmd(char** argv)
+void ls_cmd(char **argv)
 {
-	int x = 1;
-	int mode = 0;
-	string path = ".";
-	vector<string> v;
+	vector<string>v;
+	vector<string>v_sub;
+	vector<string>u_sub;
+	string path=".";
+	string ppath="";
+	string tmp;
 
+	int mode=0;
+	int slen=0;
+	v.clear();
 
-	for(;argv[x]!=NULL ;x++ )
+	for(int x=0;argv[x]!=NULL;x++)
 	{
 
-		//cout<<"ls_cmd1  was called"<<endl;
-		if(argv[x][0]!='-' && x!=0)
+		if((argv[x][0]!='-')&&(x!=0))
 		{
-			//cout<<"argv[x]="<<argv[x]<<endl;
-			path = argv[x];
+			v.push_back(string(argv[x]));
 		}
-		//first part of parameter uses '-'
 		if(argv[x][0]=='-')
 		{
-			//-a -l -R
-			//cout<<"ls_cmd argv ' -' was called"<<endl;
-			for(int y = 1; argv[x][y]!='\0'; y++)
+			slen=-1;
+			while(argv[x][++slen]!='\0');
+
+
+			for(int i=1;i<slen;i++)
 			{
-				char input = argv[x][y];
-				switch(input)
+				char chr=argv[x][i];
+				switch(chr)
 				{
 					case 'a':
-						mode |= DIR_ALL;
+						mode|=DIR_ALL;
 						break;
 					case 'l':
-						mode |= DIR_LONG;
-						break;
-					case 'R':
-						mode |= DIR_R;
-						break;
-					default:
-						cout<<"Unknown command: "<< input <<endl;
+						mode|=DIR_LONG;
 						break;
 
+					case 'R':
+						mode|=DIR_R;
+						break;
+					default:
+						cerr<<"ls Error: argument option#"<<endl;
+						return;
 				}
 			}
 		}
+
 	}
-	//push parameters into ls helper  read function
-	v = read_filenames(path);
-	if(mode & DIR_R)
-		recurdir3(path,v,mode);
+
+
+	v=read_directory(path,mode);
+
+	if(v.size()==0)
+		{
+			v=read_directory(path,mode);
+			if(mode & DIR_R)print_dir3(path,v,mode);
+			else print_dir_both(path,v,mode);
+		}
 	else
-		print_ALL(path,v,mode);
+	{
+		u_sub.clear();
+		for(unsigned int i=0;i<v.size();i++)
+		{
+			if(v[i][0]=='~')	//special case
+            {
+                tmp="/home/";
+                tmp+=getlogin();
+                if(v[i].length()>1)
+                tmp+=&v[i][1];
+                v[i]=tmp
+
+            }
+			ppath=path;
+			ppath+='/';
+			ppath=v[i];
+			errno=0;
+			v_sub=read_filenames(ppath,mode);
+
+			if(v_sub.size()>0)
+			{
+				if(mode & DIR_R)print_dir3(ppath,v_sub,mode);
+				else
+				print_dir_both(ppath,v_sub,mode);
+
+			}
+			else
+			{
+
+				if(errno==2)
+				{
+					cerr<<"ls: CANNOT ACCESS "<< v[i]<< ": "<<strerror(errno)<<endl;
+				}
+
+				if(errno !=2)
+				u_sub.push_back(v[i]);
+			}
+		}
+		if(u_sub.size()>0)
+		{
+			if(mode & DIR_R)print_dir3(path,u_sub,mode);
+			else print_dir_both(path,u_sub,mode);
+		}
+	}
+	cout<<endl;
+
+
 }
 
 
