@@ -91,10 +91,10 @@ bool stringCompare( const string &left, const string &right )
          return true;
 	 }
       else if( tolower( *lit ) > tolower( *rit ) )
-       {  
+       {
 		   return false;
 	   }
-   if( left.size() < right.size() )
+   if( left.size() > right.size() )
       {
 		  return true;
 	  }
@@ -244,6 +244,82 @@ void print_dir_both(string path, vector<string>vx, int mode)
 				}
 			}
 		}
+		else if(v.size()<8)	//only 7 filenames case
+		{
+			unsigned int len = 0;
+			for(x=0; x<v.size();x++) len+=(v[x].length()+2)
+			{
+				if(len<=ScreenWidth)
+				{
+					Free_fmt=true;
+					wordsPerLine=7;
+				}
+			}
+		}
+		else if(v.size()<7)	//only 6 filenames case
+		{
+			unsigned int len = 0;
+			for(x=0; x<v.size();x++) len+=(v[x].length()+2)
+			{
+				if(len<=ScreenWidth)
+				{
+					Free_fmt=true;
+					wordsPerLine=6;
+				}
+			}
+		}
+		else if(v.size()<6)	//only 5 filenames case
+		{
+			unsigned int len = 0;
+			for(x=0; x<v.size();x++) len+=(v[x].length()+2)
+			{
+				if(len<=ScreenWidth)
+				{
+					Free_fmt=true;
+					wordsPerLine=5;
+				}
+			}
+		}
+		else if(v.size()<5)	//only 4 filenames case
+		{
+			unsigned int len = 0;
+			for(x=0; x<v.size();x++) len+=(v[x].length()+2)
+			{
+				if(len<=ScreenWidth)
+				{
+					Free_fmt=true;
+					wordsPerLine=4;
+				}
+			}
+		}
+		else if(v.size()<4)	//only 3 filenames case
+		{
+			unsigned int len = 0;
+			for(x=0; x<v.size();x++) len+=(v[x].length()+2)
+			{
+				if(len<=ScreenWidth)
+				{
+					Free_fmt=true;
+					wordsPerLine=3;
+				}
+			}
+		}
+		else if(v.size()<3)	//only 2 filenames case
+		{
+			unsigned int len = 0;
+			for(x=0; x<v.size();x++) len+=(v[x].length()+2)
+			{
+				if(len<=ScreenWidth)
+				{
+					Free_fmt=true;
+					wordsPerLine=2;
+				}
+			}
+		}
+		if(wordsPerLine<=2 && visize()>3 && Free_fmt==false)
+        {
+
+        }
 	}
 }
 
@@ -259,7 +335,7 @@ void print_ALL(string &path, vector<string> &v, int mode)
         }
 
 	}
-	
+
 	else if(mode & DIR_ALL)
 	{
 		//-a
@@ -267,7 +343,7 @@ void print_ALL(string &path, vector<string> &v, int mode)
 		{
 			string output =  make_string(path, v[i], output, mode);
 			cout<< output << " ";
-		} 
+		}
 		cout<<endl;
 	}
 
@@ -282,9 +358,9 @@ void print_ALL(string &path, vector<string> &v, int mode)
 				cout<< output <<endl;
 			}
 		}
-		
+
 	}
-	
+
 	else	//default
 	{
 		for(unsigned int i = 0; i <v.size();i++)
@@ -350,7 +426,7 @@ void ls_cmd(char** argv)
 	if(mode & DIR_R)
 		recurdir3(path,v,mode);
 	else
-		print_ALL(path,v,mode);	
+		print_ALL(path,v,mode);
 }
 
 
