@@ -29,13 +29,14 @@ using namespace std;
 
 vector<string> read_filenames(string &path)		//get all file names on path into a vector
 {
-	DIR*  dir_ptr = opendir(path.c_str());
-	if(errno==2)
-		if(dir_ptr==NULL) perror("Open dir ");
-	
-	vector<string> filenames;
+    vector<string> filenames;
 	dirent* dir_en;
 	filenames.clear();
+	DIR*  dir_ptr = opendir(path.c_str());
+
+    if(dir_ptr==NULL)
+        if(errno==2) perror("Open dir ");
+	else
 	if(dir_ptr)
 	{
 		while(true)
@@ -72,7 +73,7 @@ void get_perms(mode_t mode, char buf[])		//build file permission string
 }
 
 void get_color_code (mode_t st_mode, char *color_fmt)	//color changing
-{				
+{
 	if(S_ISDIR(st_mode))
 	{
 		sprintf(color_fmt, "\x1b[34m");		//blue
@@ -104,18 +105,18 @@ vector <string> read_directory( const string& path,int mode )	//return contents 
   dir_ptr = opendir( path.empty() ? "." : path.c_str() );
   if (dir_ptr)
     {
-    while (true)
-    {
-      errno = 0;
-      dir_en = readdir( dir_ptr );
-	  if(errno==-1) perror("readdir " );
-      if (dir_en == NULL) break;
-      if((dir_en->d_name[0]!='.') || (mode & DIR_ALL))
-      filenames.push_back( std::string( dir_en->d_name ) );
-    }
-    closedir( dir_ptr );
-	if(errno ==-1) perror("closedir " );
-    sort( filenames.begin(), filenames.end(),stringCompare );
+        while (true)
+        {
+          errno = 0;
+          dir_en = readdir( dir_ptr );
+          if(errno==-1) perror("readdir " );
+          if (dir_en == NULL) break;
+          if((dir_en->d_name[0]!='.') || (mode & DIR_ALL))
+          filenames.push_back( std::string( dir_en->d_name ) );
+        }
+        closedir( dir_ptr );
+        if(errno ==-1) perror("closedir " );
+        sort( filenames.begin(), filenames.end(),stringCompare );
    }
   else
   {
@@ -185,8 +186,8 @@ string make_string(string& path,string fname,int mode,char* link_fmt,char* filel
     tm = localtime(&statbuf.st_mtime);
 	const char fmt[]="%b %d %H:%M"; //Month Day Hour:Minute
     // Get localized date string.
-    strftime(datestring, sizeof(datestring), fmt,tm); 
-    sprintf(tmp," %s ", datestring);  
+    strftime(datestring, sizeof(datestring), fmt,tm);
+    sprintf(tmp," %s ", datestring);
     result+=tmp;
 	}
 	//color the filename
@@ -452,10 +453,10 @@ void print_dir3(string path,vector <string>v,int mode)
 
 						}
 
-					} 
+					}
 					else
 					{
-						perror("opendir");
+						if(errno==2)perror("opendir");
 					}
 
 				}
@@ -554,10 +555,10 @@ void ls_cmd(char **argv)
 			else
 			{
 
-				if(errno==2)
+				/*if(errno==2)
 				{
 					cerr<<"ls: CANNOT ACCESS "<< v[i]<< ": "<<strerror(errno)<<endl;
-				}
+				}*/
 				if(errno !=2)
 				u_sub.push_back(v[i]);
 			}
