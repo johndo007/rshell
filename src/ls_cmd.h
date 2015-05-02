@@ -35,9 +35,10 @@ vector<string> read_filenames(string &path)		//get all file names on path into a
 	DIR*  dir_ptr = opendir(path.c_str());
 
     if(dir_ptr==NULL)
+	{
         if(errno==2) perror("Open dir ");
-	else
-	if(dir_ptr)
+	}
+	else if(dir_ptr)
 	{
 		while(true)
 		{
@@ -528,10 +529,11 @@ void ls_cmd(char **argv)
 		{
 			if(v[i][0]=='~')	//special case
 			{
-				tmp="/home/";
+				tmp="/home/csmajs";
 				user=getlogin();
 				//cout<<user<<endl;
 				if(user==NULL) perror("getlogin");
+				else
 				tmp+= user;
 				//cout<<tmp<<endl;
 				if(v[i].length()>1)
