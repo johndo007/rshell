@@ -28,7 +28,7 @@ $ bin/rshell
 - Memory allocation handled before and after execution  
 ++Added Error check messages  
 
-4.Ls Command(1.36)  
+4.Ls Command(1.38)  
 - '-a': display the all contents of directory 
 - '-l': lists out detailed info  
 - '-R': does recursive calls  
@@ -38,4 +38,6 @@ $ bin/rshell
 -Tabs are not treated as spaces and instead are treated as a character.  
 -Arrow keys are treated as characters.They will not cycle through previous commands and while move the cursor through the consol.  
 -File redirection('<' or '>' ) is not implemented  
--'~' case for ls commands has been implemented   
+-'~' case for ls commands has been implemented but is a bit buggy. Alternative access method at the momement is using:  
+    '/home/csmajs/<yourusername>' 
+
