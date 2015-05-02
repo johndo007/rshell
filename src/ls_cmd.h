@@ -30,7 +30,9 @@ using namespace std;
 vector<string> read_filenames(string &path)		//get all file names on path into a vector
 {
 	DIR*  dir_ptr = opendir(path.c_str());
-	if(dir_ptr==NULL) perror("Open dir ");
+	if(errno==2)
+		if(dir_ptr==NULL) perror("Open dir ");
+	
 	vector<string> filenames;
 	dirent* dir_en;
 	filenames.clear();
@@ -100,22 +102,26 @@ vector <string> read_directory( const string& path,int mode )	//return contents 
   DIR* dir_ptr;
   errno = 0;
   dir_ptr = opendir( path.empty() ? "." : path.c_str() );
-  if(dir_ptr==NULL) perror("opendir " );
   if (dir_ptr)
     {
     while (true)
-      {
+    {
       errno = 0;
       dir_en = readdir( dir_ptr );
 	  if(errno==-1) perror("readdir " );
       if (dir_en == NULL) break;
       if((dir_en->d_name[0]!='.') || (mode & DIR_ALL))
       filenames.push_back( std::string( dir_en->d_name ) );
-      }
+    }
     closedir( dir_ptr );
 	if(errno ==-1) perror("closedir " );
     sort( filenames.begin(), filenames.end(),stringCompare );
-    }
+   }
+  else
+  {
+  if(errno==2)
+	if(dir_ptr==NULL) perror("opendir " );
+  }
   return filenames;
   }
 
@@ -523,13 +529,15 @@ void ls_cmd(char **argv)
 			{
 				tmp="/home/";
 				user=getlogin();
+				//cout<<user<<endl;
 				if(user==NULL) perror("getlogin");
 				tmp+= user;
+				//cout<<tmp<<endl;
 				if(v[i].length()>1)
 				tmp+=&v[i][1];
 				v[i]=tmp;
 
-					}
+			}
 			ppath=path;
 			ppath+='/';
 			//ppath+= v[i];
