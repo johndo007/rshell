@@ -127,7 +127,7 @@ vector <string> read_directory( const string& path,int mode )	//return contents 
   return filenames;
   }
 
-string make_string(string& path,string fname,int mode,char* link_fmt,char* filelength_fmt)	//form string for -l
+string make_string(string& path,string fname,int mode,char* link_fmt,char* filelength_fmt,char* usr_fmt,char* grp_fmt)	//form string for -l
 {
 	struct stat     statbuf;
 	struct passwd  *pwd;
@@ -161,7 +161,7 @@ string make_string(string& path,string fname,int mode,char* link_fmt,char* filel
     // Print out owner's name if it is found using getpwuid().
     pwd = getpwuid(statbuf.st_uid);
 	if (pwd != NULL)
-        sprintf(tmp," %-s", pwd->pw_name);
+        sprintf(tmp,usr_fmt, pwd->pw_name);
     else
 	{
 		perror("getpwuid " );
@@ -172,7 +172,7 @@ string make_string(string& path,string fname,int mode,char* link_fmt,char* filel
     // Print out group name if it is found using getgrgid().
     grp = getgrgid(statbuf.st_gid);
 	if(grp != NULL)
-		sprintf(tmp," %-s", grp->gr_name);
+		sprintf(tmp,grp_fmt, grp->gr_name);
     else
 	{
 		perror("getpwgid");
@@ -213,6 +213,8 @@ void print_dir_both(string path,vector<string>vx, int mode)	//screen case
 	string output;
 	char filelength_fmt[16];
 	char link_fmt[16];
+	char usr_fmt[16];
+	char grp_fmt[16];
 	vector<string>v;
 	vector<string>v_sub;
 
@@ -330,6 +332,11 @@ void print_dir_both(string path,vector<string>vx, int mode)	//screen case
 		maxFilelength=0;
 		maxLink=1;
 		long blksize=0;
+		char tmp[32] ;
+		struct passwd *pwd;
+		struct group *grp;
+		size_t usr_len = 1;
+		size_t grp_len = 1;
 		for(x=0;x<v.size();x++)
 		{
 			ppath=path;
@@ -340,11 +347,38 @@ void print_dir_both(string path,vector<string>vx, int mode)	//screen case
 			{
 				if((v[x][0]!='.') || (mode & DIR_ALL))
 				{
-				if(statbuf.st_size>maxFilelength)
-				maxFilelength=statbuf.st_size;
-				if(statbuf.st_nlink>maxLink)maxLink=statbuf.st_nlink;
-				blocks+=statbuf.st_blocks;
-				blksize=statbuf.st_blksize;
+					if(statbuf.st_size>maxFilelength)
+						maxFilelength=statbuf.st_size;
+					if(statbuf.st_nlink>maxLink)maxLink=statbuf.st_nlink;
+						blocks+=statbuf.st_blocks;
+					blksize=statbuf.st_blksize;
+					// Print out owner's name if it is found using getpwuid().
+					pwd = getpwuid(statbuf.st_uid);
+					if (pwd != NULL)
+						sprintf(tmp,"%s", pwd->pw_name);
+					else
+					{
+						perror("getpwuid " );
+						sprintf(tmp,"%d", statbuf.st_uid);
+					}	
+					if(usr_len<strlen(tmp)) 
+					{
+						usr_len=strlen(tmp);
+					}
+					// Print out group name if it is found using getgrgid().
+					grp = getgrgid(statbuf.st_gid);
+					if(grp != NULL)
+						sprintf(tmp,"%s", grp->gr_name);
+					else
+					{
+						perror("getpwgid");
+						sprintf(tmp,"%d", statbuf.st_gid);
+					}
+					if(grp_len<strlen(tmp))
+					{
+						grp_len=strlen(tmp);
+					}
+       
 				}
 			}
 			else
@@ -367,6 +401,13 @@ void print_dir_both(string path,vector<string>vx, int mode)	//screen case
 		link_fmt[0]=' ';
 		link_fmt[1]='%';
 		sprintf(&link_fmt[2],"%dd",x);
+		usr_fmt[0]=' ';
+		usr_fmt[1]='%';
+		sprintf(&usr_fmt[2],"%ds",(int)usr_len);
+		grp_fmt[0]=' ';
+		grp_fmt[1]='%';
+		sprintf(&grp_fmt[2],"%ds",(int)grp_len);
+
 		if(blksize==4096)
 			blocks/=2;
 		else if(blksize==4096*4)blocks=blocks*2;
@@ -382,13 +423,13 @@ void print_dir_both(string path,vector<string>vx, int mode)	//screen case
 		for(x=0;x<v.size();x++)
 		{
 		if(((mode & DIR_ALL)==DIR_ALL) && (mode & DIR_LONG))
-		cout<<make_string(path,v[x],mode,link_fmt,filelength_fmt)<<endl;
+		cout<<make_string(path,v[x],mode,link_fmt,filelength_fmt,usr_fmt,grp_fmt)<<endl;
 		else if( ((mode & DIR_LONG)==DIR_LONG)&&(v[x][0]!='.') )
-		cout<<make_string(path,v[x],mode,link_fmt,filelength_fmt)<<endl;
+		cout<<make_string(path,v[x],mode,link_fmt,filelength_fmt,usr_fmt,grp_fmt)<<endl;
 		else if( (mode & DIR_ALL)==DIR_ALL )
 			{
 
-				output=make_string(path,v[x],mode,link_fmt,filelength_fmt);
+				output=make_string(path,v[x],mode,link_fmt,filelength_fmt,usr_fmt,grp_fmt);
 				l=v[x].length();
 				int len=(int)maxWlenB[wordsCount]-(int)l;
 				cout<<output;
@@ -405,7 +446,7 @@ void print_dir_both(string path,vector<string>vx, int mode)	//screen case
 			}
 		else if( (v[x][0]!='.'))
 			{
-				output=make_string(path,v[x],mode,link_fmt,filelength_fmt);
+				output=make_string(path,v[x],mode,link_fmt,filelength_fmt,usr_fmt,grp_fmt);
 				l=v[x].length();
 				int len=(int)maxWlenB[wordsCount]-(int)l;
 				cout<<output;
