@@ -3,10 +3,10 @@
 Rshell is a student made program that is meant to behave like a terminal. It is meant to run commands like other terminals and such.
 
 ##Installation
-$ git clone http://github.com/aso001/rshell.git
-$ cd rshell
-$ git checkout hw0
-$ make
+$ git clone http://github.com/aso001/rshell.git  
+$ cd rshell  
+$ git checkout hw0  
+$ make  
 
 ##Launching
 After installation:
@@ -38,6 +38,5 @@ $ bin/rshell
 -Tabs are not treated as spaces and instead are treated as a character.  
 -Arrow keys are treated as characters.They will not cycle through previous commands and while move the cursor through the consol.  
 -File redirection('<' or '>' ) is not implemented  
--'~' case for ls commands has been implemented but is a bit buggy. Alternative access method at the momement is using:  
-    '/home/csmajs/<yourusername>' 
+-'~' case for ls commands has been implemented but is a bit buggy. Alternative access method at the momement is using: '/home/csmajs/(yourusername)'   
 
