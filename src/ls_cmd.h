@@ -319,7 +319,7 @@ void print_dir_both(string path,vector<string>vx, int mode)	//screen case
 
 			for(l=0;l<linesPerDisplay;l++)
 				 for(x=l;x<vx.size();x+=linesPerDisplay) v.push_back(vx[x]);
-			cout<<"File size="<<vx.size()<<"  WPL="<<wordsPerLine<<" LPD="<<linesPerDisplay<<endl;
+			//cout<<"File size="<<vx.size()<<"  WPL="<<wordsPerLine<<" LPD="<<linesPerDisplay<<endl;
 		}
 
 
@@ -364,8 +364,9 @@ void print_dir_both(string path,vector<string>vx, int mode)	//screen case
 		for(x=0;linklength!=0;x++)
 			linklength/=10;
 		if(x==0)x=1;
-		link_fmt[0]='%';
-		sprintf(&link_fmt[1],"%dd",x);
+		link_fmt[0]=' ';
+		link_fmt[1]='%';
+		sprintf(&link_fmt[2],"%dd",x);
 		if(blksize==4096)
 			blocks/=2;
 		else if(blksize==4096*4)blocks=blocks*2;

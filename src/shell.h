@@ -26,7 +26,7 @@ using namespace std;
 		char hostname[256];
 		if (login == NULL) perror("login");
 		if (-1 == gethostname(hostname, 256)) perror("hostname");
-        
+
 		printf("%s", login);
 		printf("%s", "@");
 		printf("%s ", hostname);
@@ -239,6 +239,7 @@ using namespace std;
                             //cout<<"ls was called"<<endl;
                             ls_cmd(cmdlist);
                             abort = true;
+                            success =0;
                         }
 
                         if(pid==0 && abort  == false)
