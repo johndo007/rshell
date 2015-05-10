@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #ifndef _REDIRECT_H__
 #define _REDIRECT_H__
 
@@ -23,3 +24,6 @@ void redirection()
 // <,>,>>,|
 
 #endif // _REDIRECT_H__
+=======
+
+
