@@ -1,6 +1,5 @@
 #ifndef _SHELL_H__
 #define _SHELL_H__
-
 #include <iostream>
 #include <unistd.h>
 #include <sys/types.h>
@@ -18,20 +17,29 @@
 #include <algorithm>
 #include <pwd.h>
 #include "ls_cmd.h"
+
 using namespace std;
 
-    void prompt()   //get user info ... DONE
+    void prompt(string &input)   //get user info ... DONE
     {
 		char* login = getlogin();
+
 		char hostname[256];
+
 		if (login == NULL) perror("login");
+
 		if (-1 == gethostname(hostname, 256)) perror("hostname");
+
+
 
 		printf("%s", login);
 		printf("%s", "@");
 		printf("%s ", hostname);
 		printf("%s ", "$");
+
+		getline(cin,input);
     }
+
 
 void list_cmd(string& input, vector<string>&words,int& totalWordCount) //converts string into individal commands
 {
@@ -728,6 +736,11 @@ for(int task=0;task<=end_task;task++)
 		delete cmdlist;	//delete argument pointers
         totalWordCount = 0;
 
+
+
 }
 
+
+
 #endif // _SHELL_H__
+
