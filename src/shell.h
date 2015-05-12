@@ -40,7 +40,6 @@ using namespace std;
 		getline(cin,input);
     }
 
-
 void list_cmd(string& input, vector<string>&words,int& totalWordCount) //converts string into individal commands
 {
     vector<string> v;
@@ -216,7 +215,7 @@ void list_cmd(string& input, vector<string>&words,int& totalWordCount) //convert
 					break; //jump for-x-loop
 				}
 				word+=input.at(x);
-			
+
 			}
         }
         else	//continue inputing characters to string
@@ -250,47 +249,26 @@ void list_cmd(string& input, vector<string>&words,int& totalWordCount) //convert
     {
     	vector<string>words;
 		string tmp;
+		int pcount =0;
         const int finalWordCount = totalWordCount+1;
-        for(int x=0;x<totalWordCount;x++)
-        {
-			tmp=xwords[x];
-			if(xwords[x]!="cat")
-			{
-				words.push_back(tmp); //xwords[x]);
-			}
-			else
-			{
-				if( (x+2)<totalWordCount)
-				{
-					if(xwords[x+1]=="<<<")
-						{
-							words.push_back("echo"); //xwords[x]); //push cat
-							words.push_back(xwords[x+2]); //"....word.."
-							words.push_back("|");		//  |
-							words.push_back("cat");
-							x+=2;						//skip "
+        check_pipe_ldir(xwords,words,pcount);       //redirect <<< check process and # of |
+		//int y=words.size();
+		totalWordCount=words.size();
+        //++++++++++++++++++++++
 
+        //#define MAX_TASK	18
+        int pipes[pcount*2];	//Assume: total 18 pipes max
+        int in=-1;	//input file handle
+        int out=-1;	//output file handle
+        //int pid=0;
+        int status[pcount];	//Assume: total 18 status
+        int current_task_start[pcount];
+        int current_task_end[pcount];
 
-						}else words.push_back(tmp);
-				}else words.push_back(tmp);
+        char *current_task[32];
 
-			}
+        //++++++++++++++++++++++++++++
 
-		}
-		int y=words.size();
-		totalWordCount=y;
-//++++++++++++++++++++++
-#define MAX_TASK	18
-	int pipes[MAX_TASK*2];	//Assume: total 18 pipes max
-	int in=-1;	//input file handle
-	int out=-1;	//output file handle
-	//int pid=0;
-	int status[MAX_TASK];	//Assume: total 18 status
-	int current_task_start[MAX_TASK];
-	int current_task_end[MAX_TASK];
-
-	char *current_task[32];
-//++++++++++++++++++++++++++++
         char **cmdlist = new char*[finalWordCount];
         int count = 0;
 
@@ -304,19 +282,11 @@ void list_cmd(string& input, vector<string>&words,int& totalWordCount) //convert
 				cmdlist[count] = NULL;	//mark the end of arg list
 				//execute the command
 
-				//int pid = 0;
-				//int status1 = 0;
-				//++++++++++++++++++++++++++++++++++++++++++++
-
-
 	//int end_task=0;  //=3-1;
 	int task_index=0;
 	int l=0;
 
 	//--Simulation data
-
-
-
 	//cout<<"count="<<count<<endl;
 	//calculate starting and stopping indexes for child processing
 	current_task_start[0]=0;
