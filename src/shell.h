@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <pwd.h>
 #include "ls_cmd.h"
+#include "redirect.h"
 
 using namespace std;
 
@@ -237,9 +238,9 @@ void list_cmd(string& input, vector<string>&words,int& totalWordCount) //convert
 	}
 	totalWordCount++;
 	if(v.at(v.size()-1) != ";")
-    {
+    	{
         v.push_back(";");
-    }
+    	}
 	totalWordCount = v.size();
 	words = v;	//update vector with contents of v by reference
 
@@ -248,22 +249,22 @@ void list_cmd(string& input, vector<string>&words,int& totalWordCount) //convert
     void exec_cmd(vector<string>&xwords,int& totalWordCount)
     {
     	vector<string>words;
-		string tmp;
-		int pcount =0;
+	string tmp;
+	int pcount =0;
         const int finalWordCount = totalWordCount+1;
-        check_pipe_ldir(xwords,words,pcount);       //redirect <<< check process and # of |
-		//int y=words.size();
-		totalWordCount=words.size();
+        check_pipe_ldir(xwords,words,pcount,tmp,totalWordCount);       //redirect <<< check process and # of |
+	//int y=words.size();
+	totalWordCount=words.size();
         //++++++++++++++++++++++
 
         //#define MAX_TASK	18
-        int pipes[pcount*2];	//Assume: total 18 pipes max
+        int* pipes = new int[pcount*2];	//Assume: total 18 pipes max
         int in=-1;	//input file handle
         int out=-1;	//output file handle
         //int pid=0;
-        int status[pcount];	//Assume: total 18 status
-        int current_task_start[pcount];
-        int current_task_end[pcount];
+        int* status = new int[pcount];	//Assume: total 18 status
+        int* current_task_start= new int[pcount];
+        int* current_task_end= new int[pcount];
 
         char *current_task[32];
 
@@ -322,9 +323,9 @@ void list_cmd(string& input, vector<string>&words,int& totalWordCount) //convert
 
 
 
-int status2;
-//beginning of child processing loop
-for(int task=0;task<=end_task;task++)
+	int status2;
+	//beginning of child processing loop
+	for(int task=0;task<=end_task;task++)
 	{
 		//locate the individial task into current_task
 		int n=0;
@@ -581,6 +582,16 @@ for(int task=0;task<=end_task;task++)
 					cerr<<endl<<"Error:"<<current_task[0]<<" Id="<<getpid()<<endl;
 					exit(0);
 					}
+
+//+++++++++++++++++++++++++++++++++++
+					//Delete dynamically allocated memory
+					delete [] pipes;
+					delete [] status;
+					delete [] current_task_start;
+					delete [] current_task_end;
+
+//+++++++++++++++++++++++++++++++++++
+
 
 			}// end of end_task==0
 		}

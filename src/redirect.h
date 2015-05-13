@@ -20,13 +20,13 @@
 
 using namespace std;
 
-void check_pipe_ldir(vector<string>&inwords,vector<string>&outwords, int &pcount)
+void check_pipe_ldir(vector<string>&inwords,vector<string>&outwords, int &pcount, string &tmp, int &totalWordCount)
 {
     for(int x=0;x<totalWordCount;x++)
         {
 			tmp=inwords[x];
-			if(xwords[x]=="|") pcount +=1;
-			if(xwords[x]!="cat")
+			if(inwords[x]=="|") pcount +=1;
+			if(inwords[x]!="cat")
 			{
 				outwords.push_back(tmp); //xwords[x]);
 			}
@@ -51,7 +51,6 @@ void check_pipe_ldir(vector<string>&inwords,vector<string>&outwords, int &pcount
 
 		}
 }
-
 
 
 
