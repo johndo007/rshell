@@ -26,12 +26,15 @@ $ bin/rshell
 
 3.Shell (1.00 - 1.31)
 * Memory allocation handled before and after execution  
+* (1.38) Applied student made LS  
+* (1.45) Handle redirection and piping  
 ++Added Error check messages  
 
 4.Ls Command(1.31-1.38)  
 * '-a': display the all contents of directory 
 * '-l': lists out detailed info  
 * '-R': does recursive calls  
+* (1.45) Add support for file output when piping  
 
 5.Redirection (1.39)  
 * input redirection  
@@ -44,4 +47,4 @@ $ bin/rshell
 -Arrow keys are treated as characters.They will not cycle through previous commands and while move the cursor through the consol.  
 -File redirection('<' or '>' ) is not implemented  
 -'~' case for ls commands has been implemented but is a bit buggy. Alternative access method at the momement is using: '/home/csmajs/(yourusername)'   
-
+-Clicking on terminal will cause the cause the current line to be overwritten by the ascii value of a mouse button click.  
