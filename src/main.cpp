@@ -19,6 +19,7 @@ int main(int argc, char** argv)
 
         ///execute commands
         exec_cmd(words);
+		words.clear();	// clear vector for next cmd
 	}
 	return 0;
 }
