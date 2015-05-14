@@ -7,21 +7,19 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-	string input;		//get user cmd in one line
-    	vector<string>words;	//seperate the user input into vector of strings
-	int wordcnt = 0;	//word counter to keep track of postion
-
+	string input;			//get user cmd in one line
+   	vector<string>words;	//seperate the user input into vector of strings
+	
 	while(true)
 	{
-        prompt(); //Setup user prompt
+        prompt(input); //Setup user prompt and input
 
-	getline (cin, input);	//get user input
-
-        ///break up commands into vector<string>
-        list_cmd(input, words,wordcnt);
+	    ///break up commands into vector<string>
+        list_cmd(input, words);
 
         ///execute commands
-        exec_cmd(words,wordcnt);
+        exec_cmd(words);
+		words.clear();	// clear vector for next cmd
 	}
 	return 0;
 }
