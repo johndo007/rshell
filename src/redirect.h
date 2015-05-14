@@ -24,7 +24,7 @@ int check_pipe_ldir(vector<string>&inwords,vector<string>&outwords)
 {
 	string tmp = "";
 	int pcount =0;
-	int totalWordCount = words.size();
+	int totalWordCount = inwords.size();
     for(int x=0;x<totalWordCount;x++)
         {
 			tmp=inwords[x];
