@@ -204,7 +204,9 @@ void exec_cmd(vector<string>&xwords)
                         {
                             if(dup2(pipes[end_task*2-1],1)==-1) perror("dup2");	//output from last pipe
                             for(int ii=0;ii<end_task;ii++)
-                                if(close(pipes[ii])==-1)perror("close");
+                                if(close(pipes[ii])==-1)
+								{perror("close");cout<<"1"<<endl;}
+
 
                             //Handle output
                             bool found=false;
@@ -260,9 +262,11 @@ void exec_cmd(vector<string>&xwords)
                             }//end of input redirection
 
                             if(found_in)
-                                if(close(in)==-1)perror("close");										 // and inputfile handle
+                                if(close(in)==-1)
+								{perror("close");cout<<"2"<<endl;}										 // and inputfile handle
                             if(found)
-                            if(close(out)==-1)perror("close");										 // and outputfile handle
+                            if(close(out)==-1)
+							{perror("close");cout<<"3"<<endl;}										 // and outputfile handle
                             //cerr<<"Before in starting:"<<current_task[0]<<" Id="<<getpid()<<endl;
                             if(strcmp(current_task[0],"ls")==0)
                             {
@@ -286,7 +290,8 @@ void exec_cmd(vector<string>&xwords)
                             if(dup2(pipes[(end_task-task)*2],0)==-1)
                                 perror("dup2");		//input from the pipe above
                             for(int ii=0;ii<end_task*2;ii++)
-                                if(close(pipes[ii])==-1)    perror("close");	//Important!! close all pipes before execvp...
+                                if(close(pipes[ii])==-1)   
+								{perror("close");cout<<"4"<<endl;}	//Important!! close all pipes before execvp...
                             //cerr<<"Before in startingn:"<<current_task[0]<<" Id="<<getpid()<<endl;
                             status[task]=execvp(current_task[0],current_task);
                             if(status[task]==-1)    perror("execvp");
@@ -355,11 +360,14 @@ void exec_cmd(vector<string>&xwords)
 
                             if(end_task>0)
                                 for(int ii=0;ii<end_task*2;ii++)
-                                    if(close(pipes[ii]))    perror("close"); //Important! Close all pipes
+                                    if(close(pipes[ii]))   
+									{perror("close");cout<<"5"<<endl; } //Important! Close all pipes
                             if(found_in)
-                                if(close(in)==-1)   perror("close");										// input file handle
+                                if(close(in)==-1)   
+								{perror("close");cout<<"6"<<endl;}										// input file handle
                             if(found)
-                                if(close(out)==-1)  perror("close");										// and output file handle before child process..
+                                if(close(out)==-1)  
+								{perror("close");cout<<"7"<<endl;}										// and output file handle before child process..
                             //cerr<<"Before out starting:"<<current_task[0]<<" Id="<<getpid()<<endl;
                             if(strcmp(current_task[0],"ls")==0)
                             {
@@ -433,11 +441,13 @@ void exec_cmd(vector<string>&xwords)
 
                         if(end_task>0)
                             for(int ii=0;ii<end_task*2;ii++)
-                                if(close(pipes[ii])==-1)    perror("close"); //Important! Close all pipes
+                                if(close(pipes[ii])==-1)   
+								{ perror("close"); cout<<"8"<<endl;}//Important! Close all pipes
                         if(found_in)
-                            if(close(in)==-1)   perror("close");										// input file handle
+                            if(close(in)==-1)   
+							{perror("close"); cout<<"9"<<endl;}									// input file handle
                         if(found)
-                            if(close(out)==-1)  perror("close");										// and output file handle before child process..
+                            if(close(out)==-1)  {perror("close");cout<<"9"<<endl;}										// and output file handle before child process..
                         //cerr<<"Before out starting:"<<current_task[0]<<" Id="<<getpid()<<endl;
                         if(strcmp(current_task[0],"ls")==0)
                         {
@@ -472,27 +482,32 @@ void exec_cmd(vector<string>&xwords)
             {
                 //cerr<<"Here out33 id="<<getpid()<<endl;
                 for(int ii=0;ii<end_task*2;ii++)
-                    if(close(pipes[ii])==-1) perror("close");	//Important !!! Close pipes first for piping communication
+                    if(close(pipes[ii])==-1) 
+					{perror("close");cout<<"10"<<endl;}	//Important !!! Close pipes first for piping communication
                 for(int ii=0;ii<end_task*2;ii++)
-                    if(wait(&status1)==-1)   perror("wait");		//then wait...
+                    if(wait(&status1)==-1)   
+						if(status1!=0)	{perror("wait");cout<<"11"<<endl;}		//then wait...
             }
             else
             {
                 if(wait(&status1)==-1)  perror("wait");					//wait for non-Piping operation
                 if(out>0)
-                    if(close(out)==-1)  perror("close");			//close for out-redirection
+                    if(close(out)==-1)  
+					{perror("close");cout<<"12"<<endl;}			//close for out-redirection
                 if(in>0)
-                    if(close(in)==-1)   perror("close");
+                    if(close(in)==-1)   
+					{perror("close");cout<<"13"<<endl;}
                 if(status1<0)
                 {
                     break; //abort!!!
                 }
             }
             //++++++++++++++++++++++++++++++++++++++++++++
-            if(waitpid(-1, &status1, 0))
-            {
+            /* if(waitpid(-1, &status1, 0)==-1)
+            {	
+				cout<<"I'm here!"<<endl;
                 perror("waitpid");	//wait for a current child process finishing
-            }
+            }*/
             if(words[i] == "&&" && (status1 > 0))	//current process done
             {	//the process of if-then is ok then skip until a connector
                 int x;
@@ -569,13 +584,19 @@ void exec_cmd(vector<string>&xwords)
         }
     }
     //cerr<<"Here out id="<<getpid()<<endl;
-    if(end_task>0)
+    /*if(end_task>0)
     {
         for(int ii=0;ii<end_task*2;ii++)	//Important !!! Close pipes first for piping communication
-            if(close(pipes[ii])==-1)perror("close");
+            
+			if(close(pipes[ii])==-1)
+			{ 
+				cout<<ii<<endl;
+				perror("close");
+				cout<<"14"<<endl;
+			}
         for(int ii=0;ii<end_task*2;ii++)
             if(wait(&status1)==-1)perror("wait");		//then wait...
-    }
+    }*/
     //normal case  memory clean up when the list is completely processed
     for (int j = 0;j<count;j++)
     {
