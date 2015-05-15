@@ -160,9 +160,9 @@ void exec_cmd(vector<string>&xwords)
             cmdlist[count] = NULL;	//mark the end of arg list
             int task_index=0, l=0;
             //calculate starting and stopping indexes for child processing
-            current_task_start[0]=0;
+            current_task_start[0]=0;	//setup current task list to 0
             task_index=0;
-            for(l=0;cmdlist[l]!=NULL;l++)
+            for(l=0;cmdlist[l]!=NULL;l++)	//count the number of '|' available
             {
                 if(strcmp(cmdlist[l],"|")==0)
                 {
@@ -187,15 +187,15 @@ void exec_cmd(vector<string>&xwords)
             //begin child processing loop
             for(int task=0;task<=end_task;task++)
             {
-                //locate the individial task into current_task
+                //locate the individial task from the cmdlist[] based on the task value into current_task[]
                 int n=0;
                 for(int cur=current_task_start[task];cur<current_task_end[task];cur++)
                 {
                     current_task[n++]=cmdlist[cur];
                 }
-                current_task[n]=NULL;
+                current_task[n]=NULL;	//mark the end of the current task
 
-                if( (status2=fork())==0)
+                if( (status2=fork())==0)	//begin child process
                 {
                     if(status2==-1)perror("fork");
                     if(end_task>0)	//pipe operation
@@ -207,11 +207,10 @@ void exec_cmd(vector<string>&xwords)
                                 if(close(pipes[ii])==-1)
 								{perror("close");cout<<"1"<<endl;}
 
-
                             //Handle output
                             bool found=false;
                             int s;
-                            for(s=0;current_task[s]!=NULL;s++)
+                            for(s=0;current_task[s]!=NULL;s++)	///check for output redirection
                             {
                                 if(strcmp(current_task[s],">")==0)
                                 {
@@ -242,9 +241,9 @@ void exec_cmd(vector<string>&xwords)
                                 current_task[s]=NULL;
                             } //end of Handle OUTPUT redirection
                             //Handle input redirection
-                            bool found_in=false;
+                            bool found_in=false;	//set false to check on next redirection
 
-                            for(s=0;current_task[s]!=NULL;s++)
+                            for(s=0;current_task[s]!=NULL;s++)	///check for input redirection
                             {
                                 if(strcmp(current_task[s],"<")==0)
                                 {
