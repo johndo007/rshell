@@ -8,18 +8,13 @@ using namespace std;
 int main(int argc, char** argv)
 {
 	string input;			//get user cmd in one line
-   	vector<string>words;	//seperate the user input into vector of strings
+   	vector<string>words;	//holds all user input
 	
 	while(true)
 	{
-        prompt(input); //Setup user prompt and input
-
-	    ///break up commands into vector<string>
-        list_cmd(input, words);
-
-        ///execute commands
-        exec_cmd(words);
-		words.clear();	// clear vector for next cmd
+        prompt(input);				//Setup user prompt and input
+	    words = list_cmd(input);	//return vector<string>
+        exec_cmd(words);			//execute command
 	}
 	return 0;
 }
