@@ -5,7 +5,7 @@ Rshell is a student made program that is meant to behave like a terminal. It is 
 ##Installation
 $ git clone http://github.com/aso001/rshell.git  
 $ cd rshell  
-$ git checkout hw0  
+$ git checkout hw2  
 $ make  
 
 ##Launching
