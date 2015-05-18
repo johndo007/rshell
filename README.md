@@ -36,6 +36,7 @@ $ bin/rshell
 
 ## Known Bugs, Issues, Limitations 
 -Rshell cannot use 'cd' command  
+-Input redirection require a specific order of 'cat<(file)' 
 -Tabs are not treated as spaces and instead are treated as a character.  
 -Arrow keys are treated as characters.They will not cycle through previous commands and while move the cursor through the consol.  
 -'~' case for ls commands has been implemented but is a bit buggy. Alternative access method at the momement is using: '/home/csmajs/(yourusername)'   
