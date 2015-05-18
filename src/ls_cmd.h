@@ -26,6 +26,7 @@ using namespace std;
 #define DIR_ALL  1	//-a
 #define DIR_LONG 2	//-l
 #define DIR_R	 4  //-R
+#define DIR_FP	 32	//display to File or Pipe
 
 vector<string> read_filenames(string &path)		//get all file names on path into a vector
 {

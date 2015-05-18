@@ -21,27 +21,40 @@
 
 using namespace std;
 
+extern struct str_direct
+{
+	char *cmdlist[256];
+	char *current_task[64];
+	int task_start[64];
+	int task_end[64];
+	int pipes[64];		//Max child process = 32
+	int cmd_start;
+	int task_count;
+	int in;
+	int out;
+};
+
 void prompt(string &input)   //get user info ... DONE
 {
-    char* login = getlogin();
-    char hostname[256];
+    char* login = getlogin();	//get username
+    char hostname[256];			//allocated char memory
 
-    if (login == NULL) perror("login");
-    if (-1 == gethostname(hostname, 256)) perror("hostname");
-
+    if (login == NULL) perror("login");	//login:fail then error
+    if (-1 == gethostname(hostname, 256)) perror("hostname");	//get hostname
+	///print out prompt
     printf("%s", login);
     printf("%s", "@");
     printf("%s ", hostname);
     printf("%s ", "$");
 
-    getline(cin,input);
+    getline(cin,input);	//get user input cmd
 }
 
-void list_cmd(string& input, vector<string>&word) //converts string into individal commands
+vector<string>ls_cmd (string& input) //converts string into individal commands
 {
-    vector<string> v;
+    vector<string> word;
 	string tmp="";
-	for(unsigned int i=0;i<input.size();i++)
+	for(unsigned int i=0;i<input.size();i++)	//analyze user input stream
 	{
 	    if(input[i]=='&')
         {
@@ -110,433 +123,105 @@ void list_cmd(string& input, vector<string>&word) //converts string into individ
         }
         else
         {
-            tmp+=input[i];
+            tmp+=input[i];	//continue to gather input char
         }
     }
 	 //end of for-i-loop
 	if(tmp.size()>0)word.push_back(tmp);
-	word.push_back(";");
+	word.push_back(";");	//at the end push a ';'
+	return word;
 }
 
 void exec_cmd(vector<string>&xwords)
 {
-    vector<string>words;                        //special cases(EC)
-    int pcount = check_pipe_ldir(xwords,words); // <<< check process and # of |
-    int totalWordCount=words.size();            //hold number of arguments
-    const int finalWordCount = totalWordCount+1;
+	vector<string>word;
+	word = check_extra_credit(xwords);
+	struct str_direct r;
 
-    // pipe/redirection variables
-    int in=-1, out=-1;	//i/o file handle status
-    int* pipes = new int[pcount*2];
-    int* status = new int[pcount];
-    int* current_task_start= new int[pcount];
-    int* current_task_end= new int[pcount];
+	int total = word.size();
+	int count = 0;
+	int task, status, pid;
+	int redirect_out;
 
-    char *current_task[32];
-    char **cmdlist = new char*[finalWordCount]; //hold cmd as char*
+	for(int i=0;i<total;i++ )
+	{
+		if(word[i]=="&&"||word[i]=="||"||word[i]==";")
+		{
+			r.cmdlist[count]=NULL;
+			calculate_num_subtask(r);	//calculate # of subtasks
+			prepare_pipes(r);	//prepare pipes for subtasks
 
-    int count = 0;
-    int index_else=-1;
-    int end_task=0;
-    int status1 = 0, status2 = 0;
-    int task_index=0, l=0;
-
-    bool found=false;
-    int s;
-
-
-
-for(int i = 0; i < totalWordCount; i++)
-{
-    if((words[i] == ";") || words[i] == "||" || (words[i] == "&&"))
-    {
-        cmdlist[count] = NULL;	//mark the end of arg list
-        setup_pipe(cmdlist,count,current_task_start,task_index,l,current_task_end,end_task,status, pipes);
-
-        //begin child processing loop
-        for(int task=0;task<=end_task;task++)
-        {
-            //locate the individial task from the cmdlist[] based on the task value into current_task[]
-            int n=0;
-            for(int cur=current_task_start[task];cur<current_task_end[task];cur++)
+			for(task=0; task<=r.task_count;task++
             {
-                current_task[n++]=cmdlist[cur];
-            }
-            current_task[n]=NULL;	//mark the end of the current task
+                update_current_task_list(r,task)
 
-            if( (status2=fork())==0)	//begin child process
-            {
-                if(status2==-1)perror("fork");
-                if(end_task>0)	//pipe operation
+                if((task=fork())<0)
                 {
-                    if(task==0)		//first command in the process
-                    {
-                        if(dup2(pipes[end_task*2-1],1)==-1) perror("dup2");	//output from last pipe
-                        for(int ii=0;ii<end_task;ii++)
-                        if(close(pipes[ii])==-1)
-                            perror("close");
-
-                        //Handle output
-
-                        for(s=0;current_task[s]!=NULL;s++)	///check for output redirection
+                    perror("fork");
+                    exit(-1);
+                }
+                else if(pid==0)
+                {
+                    if(task==0)
+                    {	//setup task0
+                        int file_or_pipe=setup_task0(r);
+                        if(strcmp(r.current_task[r.cmd_start],"ls")==0)
                         {
-                            if(strcmp(current_task[s],">")==0)
-                            {
-                                found=true;
-                                break;
-                            }
-                            if(strcmp(current_task[s],">>")==0)
-                            {
-                                found=true;
-                                break;
-                            }
-                        }
-                        if(found)
-                        {
-                            if(strcmp(current_task[s],">")==0)
-                            {
-                                //cerr<<"Outputfile="<<current_task[s+1]<<endl;
-                                out=open(current_task[s+1],O_WRONLY|O_TRUNC|O_CREAT,
-                                                    S_IRUSR|S_IRGRP|S_IWGRP|S_IWUSR);
-                            }
-                            else
-                            {
-                                out=open(current_task[s+1],O_WRONLY|O_APPEND,
-                                                    S_IRUSR|S_IRGRP|S_IWGRP|S_IWUSR);
-                            }
-                            if(dup2(out,1)==-1)perror("dup2");
-                            current_task[s]=NULL;
-                        } //end of Handle OUTPUT redirection
-
-                        //Handle input redirection
-                        bool found_in=false;	//set false to check on next redirection
-
-                        for(s=0;current_task[s]!=NULL;s++)	///check for input redirection
-                        {
-                            if(strcmp(current_task[s],"<")==0)
-                            {
-                                found_in=true;
-                                break;
-                            }
-                        }
-                        if(found_in)
-                        {
-                            in=open(current_task[s+1],O_RDONLY);
-                            if(in==-1)  perror("open");
-                                if(dup2(in,0)==-1) perror("dup2");
-                                //make file info for inputting to current child cmd process
-                                current_task[s]=NULL;
-                        }//end of input redirection
-
-                        if(found_in)
-                            if(close(in)==-1)      perror("close"); // inputfile handle
-                        if(found)
-                            if(close(out)==-1)     perror("close"); // and outputfile handle
-                        if(strcmp(current_task[0],"ls")==0)
-                        {
-                            ///RUN STUDENT LS
-                            ls_cmd(current_task);
+                            ls_cmd(&r.current_task[r.cmd_start]);
+                            //ls_cmd(&r.current_task[r.cmd_start],file_or_pipe);
                             exit(0);
                         }
-                        else
-                        {
-                            ///RUN SHELL
-                            status[task]=execvp(current_task[0],current_task);
-                            if(status[task]==-1)    perror("execvp");
-                            exit(0);
-                        }
-                    }    //end of if task==0
-                    else if(task>0 && task!=end_task)
-                    {
-                        if(dup2(pipes[(end_task-task)*2-1],1)==-1)
-                            perror("dup2");		//output to next pipe below
-                        if(dup2(pipes[(end_task-task)*2],0)==-1)
-                            perror("dup2");		//input from the pipe above
-                        for(int ii=0;ii<end_task*2;ii++)
-                            if(close(pipes[ii])==-1)    perror("close");
-	                    //Important!! close all pipes before execvp...
-                        status[task]=execvp(current_task[0],current_task);
-                        if(status[task]==-1)    perror("execvp");
-                        exit(0);
-                    } //end if task>0 && task!=end_task
-                    else if(task==end_task)
-                    {	//task==end_task
-                        if(end_task>0)
-                        if(dup2(pipes[0],0)==-1) perror("dup2");	//input from the lowest pipe
-
-                        //Handle any OUTPUT redirection
-                        found=false;
-
-                        for(s=0;current_task[s]!=NULL;s++)
-                        {
-                            if(strcmp(current_task[s],">")==0)
-                            {
-                                found=true;
-                                break;
-                            }
-                            if(strcmp(current_task[s],">>")==0)
-                            {
-                                found=true;
-                                break;
-                            }
-                        }
-                        if(found)
-                        {
-                        if(strcmp(current_task[s],">")==0)
-                        {
-                            out=open(current_task[s+1],O_WRONLY|O_TRUNC|O_CREAT,
-                                                S_IRUSR|S_IRGRP|S_IWGRP|S_IWUSR);
-                        }
-                        else
-                        {
-                            out=open(current_task[s+1],O_WRONLY|O_APPEND,
-                                                S_IRUSR|S_IRGRP|S_IWGRP|S_IWUSR);
-                        }
-
-                        if(dup2(out,1)==-1)perror("dup");
-                        current_task[s]=NULL; 	//command only, no parameters
-                    }//end of //Handle any OUTPUT redirection
-
-                    // Handle any INPUT redirection
-                    bool found_in=false;
-                    for(s=0;current_task[s]!=NULL;s++)
-                    {
-                        if(strcmp(current_task[s],"<")==0)
-                        {
-                            found_in=true;
-                            break;
-                        }
-
+                        if(execvp((const char *)r.current_task[r.cmd_start],(char* const*)&r.current_task[r.cmd_start])<1)
+                            perror(r.current_task[r.cmd_start]);
+                        exit(1);
                     }
-                    if(found_in)
-                    {
-                        in=open(current_task[s+1],O_RDONLY);
-                        if(in==-1)  perror("open");
-                        if(dup2(in,0)==-1)  perror("dup2");
-                        current_task[s]=NULL; 	//command only, no parameters
-                    } //end of Handle any INPUT redirection
+                    else if(task==r.task_count)
+                    {	    //last subtask
+                        redirect_out=setup_task_end(r);
+                        if(redirect_out==-1)
+                        {
+                            perror("No output filename");
+                            exit(255);
+                        }
 
-                    if(end_task>0)
-                        for(int ii=0;ii<end_task*2;ii++)
-                            if(close(pipes[ii]))    perror("close");
-                    //Important! Close all pipes
-                    if(found_in)
-                        if(close(in)==-1)   perror("close");
-                    // input file handle
-                    if(found)
-                        if(close(out)==-1)  perror("close");
-                    // and output file handle before child process..
+                        if(execvp((const char*)r.current_task[r.cmd_start],(char* const*)&r.current_task[r.cmd_start])<0)
+                        perror(r.current_task[r.cmd_start]);
+                        exit(-1);
 
-                    if(strcmp(current_task[0],"ls")==0)
-                    {
-                        ls_cmd(current_task);
-                        exit(0);
-                    }
+                    }// end if task==r.task_count
                     else
-                    {
-                        status[task]=execvp(current_task[0],current_task);
-                        if (status[task] ==-1) perror("execvp");
-                        exit(0);
+                    {		//In Between subtask operation
+
+                        redirect_out=setup_task_inBetween(r,task);
+                        if(redirect_out==-1)
+                        {
+                            perror("No output filename");
+                            exit(255);
+                        }
+
+                        if(execvp(r.current_task[r.cmd_start],(char* const*)&r.current_task[r.cmd_start])<0)
+                        perror(r.current_task[r.cmd_start]);
+                        exit(-1);
+
                     }
-                } //end if task==last task
-            } //end if end_task>0
-            else
-            {
-            //Handle any OUTPUT redirection
-            found=false;
-
-            for(s=0;current_task[s]!=NULL;s++)
-            {
-                if(strcmp(current_task[s],">")==0)
-                {
-                    found=true;
-                    break;
                 }
-                if(strcmp(current_task[s],">>")==0)
-                {
-                    found=true;
-                    break;
-                }
-            }
-            if(found)
-            {
+            }//end of for-task-loop
 
-                if(strcmp(current_task[s],">")==0)
-            {
+//Parent comes Here
+			status=wait_until_all_tasks_over(r);
+			//determine next i=words-task
+			i=process_if_then_else(words,status,i,total);
 
-                out=open(current_task[s+1],O_WRONLY|O_TRUNC|O_CREAT,
-                                S_IRUSR|S_IRGRP|S_IWGRP|S_IWUSR);
-            }
-            else
-            {
-            out=open(current_task[s+1],O_WRONLY|O_APPEND,
-                                S_IRUSR|S_IRGRP|S_IWGRP|S_IWUSR);
-            }
-
-            if(dup2(out,1)==-1) perror("dup2");
-            current_task[s]=NULL; 	//command only, no parameters
-        }//end of //Handle any OUTPUT redirection
-
-        // Handle any INPUT redirection
-        bool found_in=false;
-        for(s=0;current_task[s]!=NULL;s++)
-        {
-            if(strcmp(current_task[s],"<")==0)
-            {
-                found_in=true;
-                break;
-            }
-
-        }
-        if(found_in)
-        {
-            in=open(current_task[s+1],O_RDONLY);
-            if(in==-1)  perror("open");
-            if(dup2(in,0)==-1)  perror("dup2");
-            current_task[s]=NULL; 	//command only, no parameters
-        } //end of Handle any INPUT redirection
-
-        if(end_task>0)
-        for(int ii=0;ii<end_task*2;ii++)
-            if(close(pipes[ii])==-1) perror("close");
-            //Important! Close all pipes
-        if(found_in)
-        if(close(in)==-1)   perror("close");
-        // input file handle
-        if(found)
-            if(close(out)==-1)  perror("close");
-            // and output file handle before child process..
-        if(strcmp(current_task[0],"ls")==0)
-        {
-            ls_cmd(current_task);
-            exit(0);
-        }
-        else
-        {
-            status[task]=execvp(current_task[0],current_task);
-            exit(0);
-        }
-        //+++++++++++++++++++++++++++++++++++
-        //Delete dynamically allocated memory
-        delete [] pipes;
-        delete [] status;
-        delete [] current_task_start;
-        delete [] current_task_end;
-
-            //+++++++++++++++++++++++++++++++++++
-        }// end of end_task==0
-    }
-    if(status2==-1)
-    {
-        perror("fork error");
-        exit(-1);
-    }
-        } //end of for-task<=end_task loop
-
-        //-------------------------------------------end of updated
-        if(end_task>0)
-        {
-            //cerr<<"Here out33 id="<<getpid()<<endl;
-            for(int ii=0;ii<end_task*2;ii++)
-            if(close(pipes[ii])==-1)
-                perror("close");    //Important !!! Close pipes first for piping communication
-            for(int ii=0;ii<end_task*2;ii++)
-            if(wait(&status1)==-1)
-            if(status1!=0)	{perror("wait");cout<<"11"<<endl;}		//then wait...
-        }
-        else
-        {
-            if(wait(&status1)==-1)  perror("wait");		//wait for non-Piping operation
-            if(out>0)
-                if(close(out)==-1)  perror("close");			//close for out-redirection
-            if(in>0)
-                if(close(in)==-1)   perror("close");
-            if(status1<0)
-            {
-                break; //abort!!!
-            }
-        }
-        //++++++++++++++++++++++++++++++++++++++++++++
-        if(words[i] == "&&" && (status1 > 0))	//current process done
-        {	//the process of if-then is ok then skip until a connector
-            int x;
-            index_else = -1;
-            x = i+1;
-            for(;x<totalWordCount; x++)
-            {
-                if(words[x]== "&&"||words[x]=="||"||words[x]==";")
-                {
-                    index_else = x;
-                    break;
-                }
-            }
-            if(index_else>0)
-            {
-                i = index_else;
-                index_else = -1;
-            }
-        }
-        else if(words[i] == "||" && (status1 == 0))
-        {//break;
-            int x;
-            index_else = -1;
-            x = i+1;
-            for(;x<totalWordCount; x++)
-            {
-                if(words[x]== "&&"||words[x]=="||"||words[x]==";")
-                {
-                    index_else = x;
-                    break;
-                }
-            }
-            if(index_else>0)
-            {
-                i = index_else;
-                index_else = -1;
-            }
-        }
-        if(status1<0)
-        {
-            cerr<<"Error4"<<endl;
-            break;
-        }
-
-        //clean any abort operation flag
-        // reset the list for next command if any
-        for(int j = 0; j < count; j++)
-        {
-            delete cmdlist[j];
-            cmdlist[j] = NULL;
-        }
-        // clear cmd counter
-        count = 0;
-    }
-    else  //simple command case or beginning of if-then cmd
-    {
-
-        if(count == 0 && words[i] == "exit")
-        {
-            for(int j =0; j<count;j++)
-            {
-                delete cmdlist[j];
-            }
-            delete cmdlist;
-            exit(1); //EXit THIS program!!!
-        }
-        cmdlist[count] = new char[words[i].size()+1];
-        copy(words[i].begin(), words[i].end(), cmdlist[count]);
-        cmdlist[count][words[i].size()] = '\0';
-        count++;
-    }
-}
-//normal case  memory clean up when the list is completely processed
-for (int j = 0;j<count;j++)
-{
-    delete cmdlist[j];	//delete the argument content
-}
-delete cmdlist;	//delete argument pointers
+			count=0;
 
 
+		}
+		else
+		{
+			if(count==0 && words[i]=="exit")exit(0);	//exit from this Program
+			r.cmdlist[count++]=(char *)words[i].c_str();
+		}
+	}//end of for-total-loo
 }
 
 #endif // _SHELL_H__
