@@ -415,11 +415,11 @@ void print_dir_both(string path,vector<string>vx, int mode)	//screen case
 		
 		usr_fmt[0]=' ';
 		usr_fmt[1]='%';
-		sprintf(&usr_fmt[2],"-%ds",usr_len);
+		sprintf(&usr_fmt[2],"-%ds",(int)usr_len);
 		
 		grp_fmt[0]=' ';
 		grp_fmt[1]='%';
-		sprintf(&grp_fmt[2],"-%ds",grp_len);
+		sprintf(&grp_fmt[2],"-%ds",(int)grp_len);
 		
 		if(mode & DIR_LONG && v.size()>1)
 		{
