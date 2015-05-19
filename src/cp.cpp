@@ -60,8 +60,8 @@ int main(int argc, char* argv[])
 
 	if ( -1 == stat(srcf, &s))
 	{
-		cout << "ERROR: source file does not exist";
-		exit (1);
+		perror("stat");
+		exit(1);
 	}
 	
 
@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
 	struct stat t1;
 	if (0 == stat(dstf, &t1))
 	{
-		cout << "ERROR:destination file already exists" << endl; 
+		perror("stat"); 
 		exit (1);
 	}
 /*	

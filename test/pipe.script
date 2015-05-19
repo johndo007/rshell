@@ -1,0 +1,191 @@
+Script started on Mon 18 May 2015 09:09:46 PM PDT
+~
+aso001@hammer $ #enable cs100
+~
+aso001@hammer $ cs100
+[0;91m
+===============================================================================
+|                                                                             |
+| You have enabled settings specific for cs100.  Everything you do is being   |
+| recorded to measure your progress in the class.                             |
+|                                                                             |
+| Important commands for the class:                                           |
+|   * calcgrade.sh          displays a detailed breakdown of your grade       |
+|   * checksyscalls.sh      is your cpp file doing proper error checking?     |
+|   * typespeed             practice typing unix commands                     |
+|                                                                             |
+| Important commands for general C++ programming:                             |
+|   * make                  don't call g++ manually; let make do the work!    |
+|   * gdb                   the GNU debugger                                  |
+|   * valgrind              get rid of your memory leaks                      |
+|   * cppcheck              static analysis tool                              |
+|   * man                   find help about any syscall / terminal command    |
+|                                                                             |
+===============================================================================
+[0m
+[s%%%%%%%%%%[u[0;32maso001[0;36m@[0;32mcs100[0;36m:[0;32m~[0;95m [0;36m$[0m cd CS100/Assignments/rshell/
+[s%%%%%%%%%%[u[0;32maso001[0;36m@[0;32mcs100[0;36m:[0;32m~/CS100/Assignments/rshell[0;95m (master) [0;36m$[0m bin/rshell
+aso001@hammer.cs.ucr.edu $ #observer what's in current directory
+aso001@hammer.cs.ucr.edu $ ls -a
+[34;47m.[39;49m   [34;47m.git[39;49m  [34mbackup[39;49m  dir.txt[39;49m  input[39;49m   LICENSE[39;49m   README.md[39;49m  [34mtest[39;49m        
+[34;47m..[39;49m  >[39;49m     [34mbin[39;49m     errors[39;49m   input2[39;49m  Makefile[39;49m  [34msrc[39;49m        typescript[39;49m  
+
+aso001@hammer.cs.ucr.edu $ ###  p ouput    i utput redirection(>)
+aso001@hammer.cs.ucr.edu $ #create a file
+aso001@hammer.cs.ucr.edu $ ls -a > afile
+aso001@hammer.cs.ucr.edu $ cat afile && rm afile
+.
+..
+.git
+>
+afile
+backup
+bin
+dir.txt
+errors
+input
+input2
+LICENSE
+Makefile
+README.md
+src
+test
+typescript
+
+aso001@hammer.cs.ucr.edu $ #order does not matter
+aso001@hammer.cs.ucr.edu $ ls >adil   file -a
+aso001@hammer.cs.ucr.edu $ [A[B  cat afile && rm afile
+[Acat: No such file or directory
+aso001@hammer.cs.ucr.edu $ ls
+>[39;49m      [34mbackup[39;49m  dir.txt[39;49m  input[39;49m   LICENSE[39;49m   README.md[39;49m  [34mtest[39;49m        
+afile[39;49m  [34mbin[39;49m     errors[39;49m   input2[39;49m  Makefile[39;49m  [34msrc[39;49m        typescript[39;49m  
+
+aso001@hammer.cs.ucr.edu $ cat afile && rm afile
+>
+afile
+backup
+bin
+dir.txt
+errors
+input
+input2
+LICENSE
+Makefile
+README.md
+src
+test
+typescript
+
+aso001@hammer.cs.ucr.edu $ # mistyped ... :P
+aso001@hammer.cs.ucr.edu $ #>afile ls -a
+aso001@hammer.cs.ucr.edu $ cat afile
+cat: afile: No such file or directory
+aso001@hammer.cs.ucr.edu $ [A[B  cat afile
+[Acat: No such file or directory
+aso001@hammer.cs.ucr.edu $ clear
+[H[2Jaso001@hammer.cs.ucr.edu $ cat afile
+cat: afile: No such file or directory
+aso001@hammer.cs.ucr.edu $ ls-a >afile
+ls-a: No such file or directory
+aso001@hammer.cs.ucr.edu $ ls
+>[39;49m      [34mbackup[39;49m  dir.txt[39;49m  input[39;49m   LICENSE[39;49m   README.md[39;49m  [34mtest[39;49m        
+afile[39;49m  [34mbin[39;49m     errors[39;49m   input2[39;49m  Makefile[39;49m  [34msrc[39;49m        typescript[39;49m  
+
+aso001@hammer.cs.ucr.edu $ #mistyped a few times
+aso001@hammer.cs.ucr.edu $ cat afile > bfile
+aso001@hammer.cs.ucr.edu $ echo      # overwrite a file
+aso001@hammer.cs.ucr.edu $ ca  ex cho Helloe world! >afile
+aso001@hammer.cs.ucr.edu $ cat afile
+Helloe world!
+aso001@hammer.cs.ucr.edu $ cat bfile
+aso001@hammer.cs.ucr.edu $ cat afile >bfile
+aso001@hammer.cs.ucr.edu $ cat bfile
+Helloe world!
+aso001@hammer.cs.ucr.edu $ ls
+>[39;49m      [34mbackup[39;49m  [34mbin[39;49m      errors[39;49m  input2[39;49m   Makefile[39;49m   [34msrc[39;49m   typescript[39;49m  
+afile[39;49m  bfile[39;49m   dir.txt[39;49m  input[39;49m   LICENSE[39;49m  README.md[39;49m  [34mtest[39;49m  
+
+aso001@hammer.cs.ucr.edu $ g++ main.cpp > 2>                 # extra credit
+aso001@hammer.cs.ucr.edu $ c g++ src/main.cpp 2> errors.txt
+aso001@hammer.cs.ucr.edu $ ls
+>[39;49m      [34mbackup[39;49m  [34mbin[39;49m      errors[39;49m      input[39;49m   LICENSE[39;49m   README.md[39;49m  [34mtest[39;49m        
+afile[39;49m  bfile[39;49m   dir.txt[39;49m  errors.txt[39;49m  input2[39;49m  Makefile[39;49m  [34msrc[39;49m        typescript[39;49m  
+
+aso001@hammer.cs.ucr.edu $ cat errors.txt
+/tmp/cchlpSfF.o: In function `main':
+main.cpp:(.text+0x30): undefined reference to `prompt(std::string&)'
+main.cpp:(.text+0x43): undefined reference to `extract_ls_cmd(std::string&)'
+main.cpp:(.text+0x6e): undefined reference to `exec_cmd(std::vector<std::string, std::allocator<std::string> >&)'
+collect2: error: ld returned 1 exit status
+aso001@hammer.cs.ucr.edu $ #
+aso001@hammer.cs.ucr.edu $ #  # inpput    put redirection
+aso001@hammer.cs.ucr.edu $ #use cc at
+aso001@hammer.cs.ucr.edu $ ca  ls
+>[39;49m      [34mbackup[39;49m  [34mbin[39;49m      errors[39;49m      input[39;49m   LICENSE[39;49m   README.md[39;49m  [34mtest[39;49m        
+afile[39;49m  bfile[39;49m   dir.txt[39;49m  errors.txt[39;49m  input2[39;49m  Makefile[39;49m  [34msrc[39;49m        typescript[39;49m  
+
+aso001@hammer.cs.ucr.edu $ cat <afile
+Helloe world!
+aso001@hammer.cs.ucr.edu $ cat <bfile
+Helloe world!
+aso001@hammer.cs.ucr.edu $ # it takes the first                    ls -a
+[34;47m.[39;49m   [34;47m.git[39;49m  afile[39;49m   bfile[39;49m  dir.txt[39;49m  errors.txt[39;49m  input2[39;49m   Makefile[39;49m   [34msrc[39;49m   typescript[39;49m  
+[34;47m..[39;49m  >[39;49m     [34mbackup[39;49m  [34mbin[39;49m    errors[39;49m   input[39;49m       LICENSE[39;49m  README.md[39;49m  [34mtest[39;49m  
+
+aso001@hammer.cs.ucr.edu $ ls -a >afile
+aso001@hammer.cs.ucr.edu $ cat afile
+.
+..
+.git
+>
+afile
+backup
+bfile
+bin
+dir.txt
+errors
+errors.txt
+input
+input2
+LICENSE
+Makefile
+README.md
+src
+test
+typescript
+
+aso001@hammer.cs.ucr.edu $ cat <afile
+.
+..
+.git
+>
+afile
+backup
+bfile
+bin
+dir.txt
+errors
+errors.txt
+input
+input2
+LICENSE
+Makefile
+README.md
+src
+test
+typescript
+
+aso001@hammer.cs.ucr.edu $ cat 2<afile
+cat: 2: No such file or directory
+aso001@hammer.cs.ucr.edu $ #extra credit
+aso001@hammer.cs.ucr.edu $ catt  <<<"hello world!!! :D Mike you are awesome.)"
+hello world!!! :D Mike you are awesome.)
+aso001@hammer.cs.ucr.edu $ #end of tests
+aso001@hammer.cs.ucr.edu $ exit
+[s%%%%%%%%%%[u[0;32maso001[0;36m@[0;32mcs100[0;36m:[0;32m~/CS100/Assignments/rshell[0;95m (master) [0;36m$[0m exit
+exit
+~
+aso001@hammer $ exit
+exit
+
+Script done on Mon 18 May 2015 09:21:56 PM PDT
