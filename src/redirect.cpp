@@ -184,11 +184,14 @@ int setup_task0(struct str_direct &r)
 		r.in = open(r.current_task[s+1],O_RDONLY);
 		if(r.in<0) perror("Error: open read");
 		if(dup2(r.in,0)<0) perror("Error: dup2 0");
+		if(s==0)
+			if(r.current_task[s+2]!=NULL)
+				r.cmd_start=s+2;
 		r.current_task[s]=NULL;
 	}
 	if(r.task_count>0)
 		for(int ii=0;ii<r.task_count*2;ii++)
-			if(close(r.pipes[ii])<0) perror("ErrorL close pipe");
+			if(close(r.pipes[ii])<0) perror("Error close pipe");
 	if(found_in)
 		if(close(r.in)<0) perror("Error: close input file");
 	if(found_out)
