@@ -17,12 +17,23 @@
 #include <grp.h>
 #include <dirent.h>
 #include <sys/ioctl.h>	//Terminal width info
+#include <signal.h>		//control C
+#include <setjmp.h>		//control C
 using namespace std;
 
 void prompt(string &input);   //get user info ... DONE
 vector<string> extract_ls_cmd (string& input) ;
 void exec_cmd(vector<string>&xwords);
 
+static volatile sig_atomic_t jumpok=0;	//control C handling
+static sigjmp_buf jmpbuf;	//control C handling
+int my_state=0;	//control C handling
+//static string findpath;	//find or cmd path operation
+void int_handler(int errno)
+{
+	if(jumpok==0)return;
+	siglongjmp(jmpbuf,1);
+}
 
 
 int main(int argc, char** argv)
@@ -30,6 +41,32 @@ int main(int argc, char** argv)
 	string input;			//get user cmd in one line
    	vector<string>words;	//holds all user input
 	
+	//---prepare control c return
+		
+	struct sigaction act;
+	act.sa_handler= (__sighandler_t)int_handler;
+	sigemptyset(&act.sa_mask);
+	act.sa_flags=0;
+	if(sigaction(SIGINT,&act,NULL)<0)
+	{
+		perror("Error setting up SIGINT handler");
+		exit(1);
+	}
+	if(sigsetjmp(jmpbuf,1))
+	{
+		cerr<<" Back to main loop state="<<my_state<<endl;
+		
+		if(my_state==2)exit(-1);	//exit from the previous Child process
+		
+		if(my_state==1)				//wait until the current process over...
+		{
+			int status;
+			if(wait(&status)<0)perror("Error:wait");
+		}
+		
+	}
+	jumpok=1;
+	//---end of preparation control C
 	while(true)
 	{
         prompt(input);				//Setup user prompt and input
