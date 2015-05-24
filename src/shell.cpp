@@ -1,4 +1,3 @@
-
 #ifndef _SHELL_H__
 #define _SHELL_H__
 #include <iostream>
@@ -44,20 +43,25 @@ int setup_task_inBetween(struct str_direct &r,int task);
 int wait_until_all_tasks_over(struct str_direct &r);
 int process_if_then_else(vector<string>&words,int status,int i,int total);
 void ls_cmd(char **argv,int fp);
+extern int my_state;	//control C handling
 
 void prompt(string &input)   //get user info ... DONE
 {
     char* login = getlogin();	//get username
     char hostname[256];			//allocated char memory
+    char cpath[256];			//hold current directory info
 
     if (login == NULL) perror("login");	//login:fail then error
     if (-1 == gethostname(hostname, 256)) perror("hostname");	//get hostname
 	///print out prompt
     printf("%s", login);
     printf("%s", "@");
-    printf("%s ", hostname);
+    printf("%s:", hostname);
+    if(getcwd(cpath, 255)<0)perror("Error:getcwd");
+    cout<<cpath;
     printf("%s ", "$");
-
+    
+	my_state=0;			//control C - state 0 -- waiting for input
     getline(cin,input);	//get user input cmd
 }
 
@@ -143,18 +147,60 @@ vector<string> extract_ls_cmd (string& input) //converts string into individal c
 	return word;
 }
 
+void cd_cmd(struct str_direct &r)
+{
+	if(strcmp(r.current_task[r.cmd_start],"cd")==0)
+		{
+				
+			//r.current_task[r.cmd_start]=NULL;	//eliminate race condition
+			//cerr<<"Trying to read Dir="<<current_task[cmd_start+1]<<endl;
+			string myhome;
+			string oldpwd;
+			char *msg;
+			char lpath[1024];
+			//process "cd" or "cd ~"
+			if((r.current_task[r.cmd_start+1]==NULL)||(strcmp(r.current_task[r.cmd_start+1],"~")==0))
+			
+			{	//cd without any argument
+				myhome="";
+				msg=getenv("HOME");
+				if(msg==NULL)perror("Error:getenv");
+				else
+				myhome +=msg;   //home dir
+								
+				r.current_task[r.cmd_start+1]=(char *)myhome.c_str();	//updated with usr home path
+				
+			}else if(strcmp(r.current_task[r.cmd_start+1],"-")==0)		//process "cd -"
+			{
+				oldpwd="";
+				msg=getenv("OLDPWD");
+				if(msg==NULL)perror("Error:getenv");
+				else
+				oldpwd +=msg;   //previous path
+				
+				
+				r.current_task[r.cmd_start+1]=(char *)oldpwd.c_str();			//updated with previous path
+			}
+			
+			if(getcwd(lpath,1023)<0)perror("Error:getcwd");						//save current path as previous path
+				else if(setenv("OLDPWD",lpath,1)<0)perror("Error:setenv");		//update OLDPWD if available	
+			if(chdir(r.current_task[r.cmd_start+1])<0)perror("Error:chdir");	//process chdir()
+				
+			//cerr<<"End of cd"<<endl;
+		}
+}	
+
 void exec_cmd(vector<string>&xwords)
 {
 	vector<string>words;
 	words = check_extra_credit(xwords);
 	struct str_direct r;
-
+	
 	int total = words.size();
 	int count = 0;
 	int task, status, pid;
 	int redirect_out;
-//cout<<"exec:"; for(int i=0;i<total;i++)cout<<words[i]<<" ";
-//cout<<endl;
+
 	for(int i=0;i<total;i++ )
 	{
 		if(words[i]=="&&"||words[i]=="||"||words[i]==";")
@@ -174,6 +220,7 @@ void exec_cmd(vector<string>&xwords)
                 }
                 else if(pid==0)
                 {
+					my_state=2;		//control C	- child process in progress
                     if(task==0)
                     {	//setup task0
                         int file_or_pipe=setup_task0(r);
@@ -184,6 +231,12 @@ void exec_cmd(vector<string>&xwords)
                             ls_cmd(&r.current_task[r.cmd_start],file_or_pipe);
                             exit(0);
                         }
+                        else if(strcmp(r.current_task[r.cmd_start],"cd")==0)
+                        {
+                        //		if(chdir(r.current_task[r.cmd_start+1])<0)
+                        //		perror("Error:chdir");
+                        		exit(0);
+						}
                         if(execvp((const char *)r.current_task[r.cmd_start],(char* const*)&r.current_task[r.cmd_start])<1)
                             perror(r.current_task[r.cmd_start]);
                         exit(1);
@@ -221,6 +274,11 @@ void exec_cmd(vector<string>&xwords)
             }//end of for-task-loop
 
 //Parent comes Here
+		    my_state=1;		//control C	--child process is over but wait until i/o pipe finish
+			if(strcmp(r.current_task[r.cmd_start],"cd")==0)
+				{
+					cd_cmd(r);
+				}
 			status=wait_until_all_tasks_over(r);
 			//determine next i=words-task
 			i=process_if_then_else(words,status,i,total);
