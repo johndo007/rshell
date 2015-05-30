@@ -49,6 +49,15 @@ extern int my_bg_status; //control Z handling
 extern int my_current_pid;
 extern char *myfifo;
 
+bool replaceHOME(std::string& str, const std::string& from, const std::string& to)
+{
+    size_t start_pos = str.find(from);
+    if(start_pos == std::string::npos)
+        return false;
+    str.replace(start_pos, from.length(), to);
+    return true;
+}
+
 void prompt(string &input)   //get user info ... DONE
 {
     char* login = getlogin();	//get username
@@ -70,9 +79,9 @@ void prompt(string &input)   //get user info ... DONE
 	    exit(1);
 	}
 	// HOME case
-	string tcwd(cpath);
+	string tempcwd(cpath);
 	string thome(pHome);
-	replace(tcwd, thome, "~");
+	replaceHOME(tempcwd, thome, "~");
     
     cout<<tmpcwd.c_str();
     printf("%s ", "$");
