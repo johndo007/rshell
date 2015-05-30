@@ -77,6 +77,7 @@ int main(int argc, char** argv)
 	if(sigsetjmp(jmpbuf,1))
 	{
 		//cerr<<" Back to main loop state="<<my_state<<" bg_status="<<my_bg_status<<endl;
+		cout<<endl;
 		if((fd=open("myfifo",O_RDONLY|O_NONBLOCK))==-1)
 		{
 			perror("Parent cannot open2 FIFO");
