@@ -38,8 +38,6 @@ void int_handler(int x)
 {
 	if(jumpok==0)return;
 	my_bg_status=x;
-	//if(errno==SIGTSTP)my_error=4;
-	//if(errno==SIGINT)
 	bg_pid=getpid();
 	siglongjmp(jmpbuf,1);
 }
@@ -91,11 +89,11 @@ int main(int argc, char** argv)
 			//while((wait(&status)==-1) && (errno==EINTR));
 			if(read(fd,buf,32)<=0)
 			{
-				perror("Parent read from FIFO2 failed\n");
+				//perror("Parent read from FIFO2 failed\n");
 				exit(1);
 			}
 			
-			cerr<<" detected control Z PID="<<buf<<endl;
+			//cerr<<" detected control Z PID="<<buf<<endl;
 		
 		}
 		else
