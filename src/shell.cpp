@@ -44,20 +44,48 @@ int setup_task_inBetween(struct str_direct &r,int task);
 int wait_until_all_tasks_over(struct str_direct &r);
 int process_if_then_else(vector<string>&words,int status,int i,int total);
 void ls_cmd(char **argv,int fp);
+extern int my_state;	//control C handling
+extern int my_bg_status; //control Z handling
+extern int my_current_pid;
+extern char *myfifo;
+
+bool replaceHOME(std::string& str, const std::string& from, const std::string& to)
+{
+    size_t start_pos = str.find(from);
+    if(start_pos == std::string::npos)
+        return false;
+    str.replace(start_pos, from.length(), to);
+    return true;
+}
 
 void prompt(string &input)   //get user info ... DONE
 {
     char* login = getlogin();	//get username
     char hostname[256];			//allocated char memory
+    char cpath[256];			//hold current directory info
 
     if (login == NULL) perror("login");	//login:fail then error
     if (-1 == gethostname(hostname, 256)) perror("hostname");	//get hostname
 	///print out prompt
     printf("%s", login);
     printf("%s", "@");
-    printf("%s ", hostname);
+    printf("%s:", hostname);
+    if(getcwd(cpath, 255)<0)perror("Error:getcwd");
+    char* pHome;
+	//std::string home_char "~";
+	if (0 == (pHome = getenv("HOME"))) {
+	    perror("getenv");
+	    exit(1);
+	}
+	// HOME case
+	string tempcwd(cpath);
+	string thome(pHome);
+	replaceHOME(tempcwd, thome, "~");
+
+    cout<<tempcwd.c_str();
     printf("%s ", "$");
 
+	my_state=0;			//control C - state 0 -- waiting for input
     getline(cin,input);	//get user input cmd
 }
 
@@ -142,7 +170,48 @@ vector<string> extract_ls_cmd (string& input) //converts string into individal c
 	word.push_back(";");	//at the end push a ';'
 	return word;
 }
+void cd_cmd(struct str_direct &r)
+{
+	if(strcmp(r.current_task[r.cmd_start],"cd")==0)
+		{
 
+			//r.current_task[r.cmd_start]=NULL;	//eliminate race condition
+			//cerr<<"Trying to read Dir="<<current_task[cmd_start+1]<<endl;
+			string myhome;
+			string oldpwd;
+			char *msg;
+			char lpath[1024];
+			//process "cd" or "cd ~"
+			if((r.current_task[r.cmd_start+1]==NULL)||(strcmp(r.current_task[r.cmd_start+1],"~")==0))
+
+			{	//cd without any argument
+				myhome="";
+				msg=getenv("HOME");
+				if(msg==NULL)perror("Error:getlogin");
+				else
+				myhome +=msg;   //home dir
+
+				r.current_task[r.cmd_start+1]=(char *)myhome.c_str();	//updated with usr home path
+
+			}else if(strcmp(r.current_task[r.cmd_start+1],"-")==0)		//process "cd -"
+			{
+				oldpwd="";
+				msg=getenv("OLDPWD");
+				if(msg==NULL)perror("Error:getlogin");
+				else
+				oldpwd +=msg;   //previous path
+
+
+				r.current_task[r.cmd_start+1]=(char *)oldpwd.c_str();			//updated with previous path
+			}
+
+			if(getcwd(lpath,1023)<0)perror("Error:getcwd");						//save current path as previous path
+				else if(setenv("OLDPWD",lpath,1)<0)perror("Error:setenv");		//update OLDPWD if available
+			if(chdir(r.current_task[r.cmd_start+1])<0)perror("Error:chdir");	//process chdir()
+
+			//cerr<<"End of cd"<<endl;
+		}
+}
 void exec_cmd(vector<string>&xwords)
 {
 	vector<string>words;
@@ -153,8 +222,6 @@ void exec_cmd(vector<string>&xwords)
 	int count = 0;
 	int task, status, pid;
 	int redirect_out;
-//cout<<"exec:"; for(int i=0;i<total;i++)cout<<words[i]<<" ";
-//cout<<endl;
 	for(int i=0;i<total;i++ )
 	{
 		if(words[i]=="&&"||words[i]=="||"||words[i]==";")
@@ -180,11 +247,15 @@ void exec_cmd(vector<string>&xwords)
                         //if(file_or_pipe==1)file_or_pipe=2;
                         if(strcmp(r.current_task[r.cmd_start],"ls")==0)
                         {
-                            //ls_cmd(&r.current_task[r.cmd_start]);
                             ls_cmd(&r.current_task[r.cmd_start],file_or_pipe);
                             exit(0);
                         }
-                        if(execvp((const char *)r.current_task[r.cmd_start],(char* const*)&r.current_task[r.cmd_start])<1)
+                        if(strcmp(r.current_task[r.cmd_start],"cd")==0)
+                       	{
+							//cd_cmd(r);
+							exit(0);
+						}
+						if(execvp((const char *)r.current_task[r.cmd_start],(char* const*)&r.current_task[r.cmd_start])<1)
                             perror(r.current_task[r.cmd_start]);
                         exit(1);
                     }
@@ -220,7 +291,12 @@ void exec_cmd(vector<string>&xwords)
                 }
             }//end of for-task-loop
 
-//Parent comes Here
+//Parent comes Heree
+			my_state=1;
+			if(strcmp(r.current_task[r.cmd_start],"cd")==0)
+			{
+				cd_cmd(r);
+			}
 			status=wait_until_all_tasks_over(r);
 			//determine next i=words-task
 			i=process_if_then_else(words,status,i,total);
@@ -236,5 +312,4 @@ void exec_cmd(vector<string>&xwords)
 		}
 	}//end of for-total-loo
 }
-
 #endif // _SHELL_H__

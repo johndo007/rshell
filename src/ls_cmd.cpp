@@ -609,7 +609,8 @@ void ls_cmd(char **argv,int fp)
 						
 						
 						tmp="/home/";
-						tmp+=getlogin();   //hostname;
+						tmp+=getlogin();
+						if(errno<0)perror("getlogin");   //hostname;
 						if(v[i].length()>1)
 						tmp+=&v[i][1];
 						v[i]=tmp;

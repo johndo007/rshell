@@ -5,7 +5,7 @@ Rshell is a student made program that is meant to behave like a terminal. It is 
 ##Installation
 $ git clone http://github.com/aso001/rshell.git  
 $ cd rshell  
-$ git checkout hw2  
+$ git checkout hw3  
 $ make  
 
 ##Launching
@@ -33,6 +33,10 @@ $ bin/rshell
 * input redirection - understands '<<<' case   
 * output redirection  - understands '2>' case  
 * piping  
+
+4.Signals (1.54)  
+* cd - cd [path], cd -, cd  
+* ^c signal - end child process. It will go to user prompt if your in parent state.  
 
 ## Known Bugs, Issues, Limitations 
 -Rshell cannot use 'cd' command  
