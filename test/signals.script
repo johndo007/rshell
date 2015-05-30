@@ -1,0 +1,168 @@
+Script started on Fri 29 May 2015 10:07:48 PM PDT
+~
+aso001@hammer $ cd CS100/Assignments/rshell/
+~/CS100/Assignments/rshell
+aso001@hammer $ bin/rshell
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ #cd
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ 3 pwd
+/home/csmajs/aso001/CS100/Assignments/rshell
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ cd ..
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments$ pwd
+/home/csmajs/aso001/CS100/Assignments
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments$ ls
+[34mLAB[39;49m  [34mmike[39;49m  [34mrshell[39;49m
+
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments$ cd    # backwards
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments$ cd ..
+aso001@hammer.cs.ucr.edu:~/CS100$ #here
+aso001@hammer.cs.ucr.edu:~/CS100$ cd .
+aso001@hammer.cs.ucr.edu:~/CS100$ pwd
+/home/csmajs/aso001/CS100
+aso001@hammer.cs.ucr.edu:~/CS100$ ls
+[34mAssignments[39;49m  [34mgitlearn[39;49m  [34mgitlearn_doc[39;49m  [34mReference[39;49m  [34mucr-cs100[39;49m
+
+aso001@hammer.cs.ucr.edu:~/CS100$ #go forward
+aso001@hammer.cs.ucr.edu:~/CS100$ cd A	ssigna ments
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments$ cd    ls
+[34mLAB[39;49m  [34mmike[39;49m  [34mrshell[39;49m
+
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments$ cd rshell
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ #paths
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ cd /usr/csshare/cs100
+aso001@hammer.cs.ucr.edu:/usr/csshare/cs100$ ls
+[34mbin[39;49m  [34metc[39;49m  [34mlog[39;49m  [34mshare[39;49m  [34msrc[39;49m  [34mvar[39;49m
+
+aso001@hammer.cs.ucr.edu:/usr/csshare/cs100$ cd
+aso001@hammer.cs.ucr.edu:~$ cd / /bin/sbin
+aso001@hammer.cs.ucr.edu:/$ ls
+[34mbin[39;49m                         [34mclass[39;49m  [34mhome[39;49m        [34mmedia[39;49m  [34mopt[39;49m   [34mselinux[39;49m  [34musr[39;49m  
+[34mboot[39;49m                        [34mdev[39;49m    [34mlib[39;49m         [34mmisc[39;49m   [34mproc[39;49m  [34msrv[39;49m      [34mvar[39;49m  
+C:\nppdf32Log\debuglog.txt[39;49m  [34metc[39;49m    [34mlib64[39;49m       [34mmnt[39;49m    [34mroot[39;49m  [34msys[39;49m      
+[34mcgroup[39;49m                      [34mextra[39;49m  [34mlost+found[39;49m  [34mnet[39;49m    [34msbin[39;49m  [34mtmp[39;49m      
+
+aso001@hammer.cs.ucr.edu:/$ cd  #return home dir
+aso001@hammer.cs.ucr.edu:/$ cd 
+aso001@hammer.cs.ucr.edu:~$ cd CS100
+aso001@hammer.cs.ucr.edu:~/CS100$ cd / Assignaments/rshell
+Error:chdir: No such file or directory
+aso001@hammer.cs.ucr.edu:~/CS100$ ls
+[34mAssignments[39;49m  [34mgitlearn[39;49m  [34mgitlearn_doc[39;49m  [34mReference[39;49m  [34mucr-cs100[39;49m
+
+aso001@hammer.cs.ucr.edu:~/CS100$ cd Assignmnt  ens ts/rshell
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ ls
+[34mbin[39;49m  LICENSE[39;49m  Makefile[39;49m  myfifo[39;49m  README.md[39;49m  [34msrc[39;49m  [34mtest[39;49m
+
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ #now testing ctrl-c
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ ps
+  PID TTY          TIME CMD
+29075 pts/74   00:00:00 bash
+29144 pts/74   00:00:00 rshell
+30216 pts/74   00:00:00 ps
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ cat  
+
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ ps
+  PID TTY          TIME CMD
+29075 pts/74   00:00:00 bash
+29144 pts/74   00:00:00 rshell
+30553 pts/74   00:00:00 ps
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ bin/shell     rshell          #calling rshell
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ bin/rshell
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ ps
+  PID TTY          TIME CMD
+29075 pts/74   00:00:00 bash
+29144 pts/74   00:00:00 rshell
+31555 pts/74   00:00:00 rshell
+31578 pts/74   00:00:00 ps
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ cat
+
+
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ ps
+  PID TTY          TIME CMD
+29075 pts/74   00:00:00 bash
+29144 pts/74   00:00:00 rshell
+31555 pts/74   00:00:00 rshell
+32989 pts/74   00:00:00 ps
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ cat hi
+cat: hi: No such file or directory
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ ls
+[34mbin[39;49m  LICENSE[39;49m  Makefile[39;49m  myfifo[39;49m  README.md[39;49m  [34msrc[39;49m  [34mtest[39;49m
+
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ cat Re EADME.md
+# RShell
+
+Rshell is a student made program that is meant to behave like a terminal. It is meant to run commands like other terminals and such.
+
+##Installation
+$ git clone http://github.com/aso001/rshell.git  
+$ cd rshell  
+$ git checkout hw3  
+$ make  
+
+##Launching
+After installation:
+$ bin/rshell
+
+##Features
+1.Shell (1.50)
+* Memory allocation handled before and after execution  
+* Prompts for username and hostname if avilable  
+* `&&` will execute the next command, if the previous command executes.
+* `||` will execute the next command, if the previous command fails to execute.
+* `;` will always execute the next command.
+* (1.38) Applied student made LS  
+* (1.45) Handle redirection and piping  
+++Added Error check messages  
+
+2.Ls Command(1.38)  
+* '-a': display the all contents of directory 
+* '-l': lists out detailed info  
+* '-R': does recursive calls  
+* (1.45) Add support for file output when piping  
+
+3.Redirection (1.50)  
+* input redirection - understands '<<<' case   
+* output redirection  - understands '2>' case  
+* piping  
+
+4.Signals (1.54)  
+* cd - cd [path], cd -, cd  
+* ^c signal - end child process. It will go to user prompt if your in parent state.  
+
+## Known Bugs, Issues, Limitations 
+-Rshell cannot use 'cd' command  
+-Input redirection require a specific order of 'cat<(file)'  
+-Tabs are not treated as spaces and instead are treated as a character.  
+-Arrow keys are treated as characters.They will not cycle through previous commands and while move the cursor through the consol.  
+-'~' case for ls commands has been implemented but is a bit buggy. Alternative access method at the momement is using: '/home/csmajs/(yourusername)'   
+-Clicking on terminal will cause the cause the current line to be overwritten by the ascii value of a mouse button click.  
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ cat
+
+
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ ps
+  PID TTY          TIME CMD
+29075 pts/74   00:00:00 bash
+29144 pts/74   00:00:00 rshell
+31555 pts/74   00:00:00 rshell
+33214 pts/74   00:00:00 ps
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ 
+
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ ps
+  PID TTY          TIME CMD
+29075 pts/74   00:00:00 bash
+29144 pts/74   00:00:00 rshell
+31555 pts/74   00:00:00 rshell
+33335 pts/74   00:00:00 ps
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ #rshell ignores c         parent ignores ctri l-c
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ exit
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ ps
+  PID TTY          TIME CMD
+29075 pts/74   00:00:00 bash
+29144 pts/74   00:00:00 rshell
+33447 pts/74   00:00:00 ps
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ #done with testing v1.55
+aso001@hammer.cs.ucr.edu:~/CS100/Assignments/rshell$ exit
+~/CS100/Assignments/rshell
+aso001@hammer $ exit
+exit
+
+Script done on Fri 29 May 2015 10:17:04 PM PDT
