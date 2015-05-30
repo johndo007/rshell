@@ -34,9 +34,9 @@ $ bin/rshell
 * output redirection  - understands '2>' case  
 * piping  
 
-4.Signals (1.51)  
-* cd  
-* ^c signal
+4.Signals (1.54)  
+* cd - cd [path], cd -, cd  
+* ^c signal - end child process. It will go to user prompt if your in parent state.  
 
 ## Known Bugs, Issues, Limitations 
 -Rshell cannot use 'cd' command  
