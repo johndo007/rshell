@@ -217,14 +217,11 @@ void exec_cmd(vector<string>&xwords)
 	vector<string>words;
 	words = check_extra_credit(xwords);
 	struct str_direct r;
-	//int fd;
-	//char buf[32];
+
 	int total = words.size();
 	int count = 0;
-	int task, pid;  //status, pid;
-	//int redirect_out;
-//cout<<"exec:"; for(int i=0;i<total;i++)cout<<words[i]<<" ";
-//cout<<endl;
+	int task, status, pid;
+	int redirect_out;
 	for(int i=0;i<total;i++ )
 	{
 		if(words[i]=="&&"||words[i]=="||"||words[i]==";")
@@ -244,78 +241,69 @@ void exec_cmd(vector<string>&xwords)
                 }
                 else if(pid==0)
                 {
-					my_state=2;		//control C	- child process in progress
                     if(task==0)
                     {	//setup task0
-
                         int file_or_pipe=setup_task0(r);
                         //if(file_or_pipe==1)file_or_pipe=2;
                         if(strcmp(r.current_task[r.cmd_start],"ls")==0)
                         {
-                            //ls_cmd(&r.current_task[r.cmd_start]);
                             ls_cmd(&r.current_task[r.cmd_start],file_or_pipe);
                             exit(0);
                         }
-                        else if(strcmp(r.current_task[r.cmd_start],"cd")==0)
-                        {
-                        //		if(chdir(r.current_task[r.cmd_start+1])<0)
-                        //		perror("Error:chdir");
-                        		exit(0);
-						}
-						else if(task==r.task_count)
-						{	    //last subtask
-							redirect_out=setup_task_end(r);
-							if(redirect_out==-1)
-							{
-								perror("No output filename");
-								exit(255);
-							}
-
-							if(execvp((const char*)r.current_task[r.cmd_start],(char* const*)&r.current_task[r.cmd_start])<0)
-								 perror(r.current_task[r.cmd_start]);
-							exit(-1);
-
-						}// end if task==r.task_count
-						else
-						{		//In Between subtask operation
-
-							redirect_out=setup_task_inBetween(r,task);
-							if(redirect_out==-1)
-							{
-								 perror("No output filename");
-								exit(255);
-							 }
-
-							if(execvp(r.current_task[r.cmd_start],(char* const*)&r.current_task[r.cmd_start])<0)
-								 perror(r.current_task[r.cmd_start]);
-							exit(-1);
-
-						}
-					}
-				}//end of for-task-loop
-
-
-						my_state=1;		//control C	--child process is over but wait until i/o pipe finish
-						if(strcmp(r.current_task[r.cmd_start],"cd")==0)
-						{
+                        if(strcmp(r.current_task[r.cmd_start],"cd")==0)
+                       	{
 							cd_cmd(r);
 						}
-						status=wait_until_all_tasks_over(r);
-						//determine next i=words-task
-						i=process_if_then_else(words,status,i,total);
+						if(execvp((const char *)r.current_task[r.cmd_start],(char* const*)&r.current_task[r.cmd_start])<1)
+                            perror(r.current_task[r.cmd_start]);
+                        exit(1);
+                    }
+                    else if(task==r.task_count)
+                    {	    //last subtask
+                        redirect_out=setup_task_end(r);
+                        if(redirect_out==-1)
+                        {
+                            perror("No output filename");
+                            exit(255);
+                        }
 
-						count=0;
+                        if(execvp((const char*)r.current_task[r.cmd_start],(char* const*)&r.current_task[r.cmd_start])<0)
+                        perror(r.current_task[r.cmd_start]);
+                        exit(-1);
+
+                    }// end if task==r.task_count
+                    else
+                    {		//In Between subtask operation
+
+                        redirect_out=setup_task_inBetween(r,task);
+                        if(redirect_out==-1)
+                        {
+                            perror("No output filename");
+                            exit(255);
+                        }
+
+                        if(execvp(r.current_task[r.cmd_start],(char* const*)&r.current_task[r.cmd_start])<0)
+                        perror(r.current_task[r.cmd_start]);
+                        exit(-1);
+
+                    }
+                }
+            }//end of for-task-loop
+
+//Parent comes Here
+			status=wait_until_all_tasks_over(r);
+			//determine next i=words-task
+			i=process_if_then_else(words,status,i,total);
+
+			count=0;
 
 
-					}
-					else
-					{
-						if(count==0 && words[i]=="exit")exit(0);	//exit from this Program
-						r.cmdlist[count++]=(char *)words[i].c_str();
-					}		
-				}//end of for-total-loo
-			}
 		}
-	}
+		else
+		{
+			if(count==0 && words[i]=="exit")exit(0);	//exit from this Program
+			r.cmdlist[count++]=(char *)words[i].c_str();
+		}
+	}//end of for-total-loo
 }
 #endif // _SHELL_H__
