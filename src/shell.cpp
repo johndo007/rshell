@@ -252,7 +252,8 @@ void exec_cmd(vector<string>&xwords)
                         }
                         if(strcmp(r.current_task[r.cmd_start],"cd")==0)
                        	{
-							cd_cmd(r);
+							//cd_cmd(r);
+							exit(0);
 						}
 						if(execvp((const char *)r.current_task[r.cmd_start],(char* const*)&r.current_task[r.cmd_start])<1)
                             perror(r.current_task[r.cmd_start]);
@@ -290,7 +291,12 @@ void exec_cmd(vector<string>&xwords)
                 }
             }//end of for-task-loop
 
-//Parent comes Here
+//Parent comes Heree
+			my_state=1;
+			if(strcmp(r.current_task[r.cmd_start],"cd")==0)
+			{
+				cd_cmd(r);
+			}
 			status=wait_until_all_tasks_over(r);
 			//determine next i=words-task
 			i=process_if_then_else(words,status,i,total);

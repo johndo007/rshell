@@ -116,6 +116,7 @@ int main(int argc, char** argv)
         prompt(input);				//Setup user prompt and input
        
 	    words = extract_ls_cmd(input);	//return vector<string>
+		if(words[0]!=";")
 	   
         exec_cmd(words);			//execute command
 	}
