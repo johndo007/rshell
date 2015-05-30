@@ -61,8 +61,20 @@ void prompt(string &input)   //get user info ... DONE
     printf("%s", login);
     printf("%s", "@");
     printf("%s:", hostname);
+    printf("%s:", ": ");
     if(getcwd(cpath, 255)<0)perror("Error:getcwd");
-    cout<<cpath;
+    char* pHome;
+	//std::string home_char "~";
+	if (0 == (pHome = getenv("HOME"))) {
+	    perror("getenv");
+	    exit(1);
+	}
+	// HOME case
+	string tcwd(cpath);
+	string thome(pHome);
+	replace(tcwd, thome, "~");
+    
+    cout<<tmpcwd.c_str();
     printf("%s ", "$");
     
 	my_state=0;			//control C - state 0 -- waiting for input
