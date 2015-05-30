@@ -1,3 +1,4 @@
+
 #ifndef _SHELL_H__
 #define _SHELL_H__
 #include <iostream>
@@ -44,6 +45,9 @@ int wait_until_all_tasks_over(struct str_direct &r);
 int process_if_then_else(vector<string>&words,int status,int i,int total);
 void ls_cmd(char **argv,int fp);
 extern int my_state;	//control C handling
+extern int my_bg_status; //control Z handling
+extern int my_current_pid;
+extern char *myfifo;
 
 void prompt(string &input)   //get user info ... DONE
 {
@@ -146,7 +150,6 @@ vector<string> extract_ls_cmd (string& input) //converts string into individal c
 	word.push_back(";");	//at the end push a ';'
 	return word;
 }
-
 void cd_cmd(struct str_direct &r)
 {
 	if(strcmp(r.current_task[r.cmd_start],"cd")==0)
@@ -164,7 +167,7 @@ void cd_cmd(struct str_direct &r)
 			{	//cd without any argument
 				myhome="";
 				msg=getenv("HOME");
-				if(msg==NULL)perror("Error:getenv");
+				if(msg==NULL)perror("Error:getlogin");
 				else
 				myhome +=msg;   //home dir
 								
@@ -174,7 +177,7 @@ void cd_cmd(struct str_direct &r)
 			{
 				oldpwd="";
 				msg=getenv("OLDPWD");
-				if(msg==NULL)perror("Error:getenv");
+				if(msg==NULL)perror("Error:getlogin");
 				else
 				oldpwd +=msg;   //previous path
 				
@@ -189,18 +192,19 @@ void cd_cmd(struct str_direct &r)
 			//cerr<<"End of cd"<<endl;
 		}
 }	
-
 void exec_cmd(vector<string>&xwords)
 {
 	vector<string>words;
 	words = check_extra_credit(xwords);
 	struct str_direct r;
-	
+	int fd;
+	char buf[32];
 	int total = words.size();
 	int count = 0;
 	int task, status, pid;
 	int redirect_out;
-
+//cout<<"exec:"; for(int i=0;i<total;i++)cout<<words[i]<<" ";
+//cout<<endl;
 	for(int i=0;i<total;i++ )
 	{
 		if(words[i]=="&&"||words[i]=="||"||words[i]==";")
@@ -223,6 +227,7 @@ void exec_cmd(vector<string>&xwords)
 					my_state=2;		//control C	- child process in progress
                     if(task==0)
                     {	//setup task0
+						
                         int file_or_pipe=setup_task0(r);
                         //if(file_or_pipe==1)file_or_pipe=2;
                         if(strcmp(r.current_task[r.cmd_start],"ls")==0)
@@ -237,6 +242,38 @@ void exec_cmd(vector<string>&xwords)
                         //		perror("Error:chdir");
                         		exit(0);
 						}
+						else if(strcmp(r.current_task[r.cmd_start],"fg")==0)
+						{
+							if(my_bg_status==20)
+							{
+								my_bg_status=0;
+								raise(SIGCONT);
+								cerr<<"Finishing the background processing..."<<endl;
+								exit(0);
+							}
+							else
+							{
+								perror("No forground process");
+								exit(0);
+							}
+						}
+						
+						//char buf[32];
+						my_current_pid=getpid();
+						if((fd=open("myfifo",O_WRONLY))==-1)
+						{
+							perror("Child cannot open FIFO write");
+							exit(1);
+						}
+						sprintf(buf,"%ld",(long)getpid());
+						int msize=strlen(buf)+1;
+						if(write(fd,buf,msize)!=msize)
+						{
+							cerr<<"Child write to FIFO failed"<<buf<<endl;
+							exit(1);
+						}
+						close(fd);
+						//cerr<<"Current PID="<<my_current_pid<<endl;
                         if(execvp((const char *)r.current_task[r.cmd_start],(char* const*)&r.current_task[r.cmd_start])<1)
                             perror(r.current_task[r.cmd_start]);
                         exit(1);
@@ -274,6 +311,18 @@ void exec_cmd(vector<string>&xwords)
             }//end of for-task-loop
 
 //Parent comes Here
+
+			if((fd=open("myfifo",O_RDONLY|O_NONBLOCK))==-1)
+		{
+			perror("Parent cannot open1 FIFO");
+			exit(1);
+		}
+		//if(read(fd,buf,32)<=0)
+			{
+				//perror("Parent read from FIFO1 failed\n");
+				//exit(1);
+			}
+
 		    my_state=1;		//control C	--child process is over but wait until i/o pipe finish
 			if(strcmp(r.current_task[r.cmd_start],"cd")==0)
 				{
