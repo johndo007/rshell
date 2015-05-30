@@ -47,15 +47,15 @@ int main(int argc, char** argv)
 {
 	string input;			//get user cmd in one line
    	vector<string>words;	//holds all user input
-	mode_t fifo_mode=S_IRUSR|S_IWUSR;
-	int fd;
+	//mode_t fifo_mode=S_IRUSR|S_IWUSR;
+	//int fd;
 	//int status;
-	char buf[32];
-	if((mkfifo("myfifo",fifo_mode)==-1)&&(errno != EEXIST))
+	//char buf[32];
+	/*if((mkfifo("myfifo",fifo_mode)==-1)&&(errno != EEXIST))
 	{
 		cerr<<"Could not create a named pipe:"<<myfifo<<endl;
 	}
-   
+   */
 	
 	//---prepare control c return
 		
@@ -78,7 +78,7 @@ int main(int argc, char** argv)
 	{
 		//cerr<<" Back to main loop state="<<my_state<<" bg_status="<<my_bg_status<<endl;
 		cout<<endl;
-		if((fd=open("myfifo",O_RDONLY|O_NONBLOCK))==-1)
+		/*if((fd=open("myfifo",O_RDONLY|O_NONBLOCK))==-1)
 		{
 			perror("Parent cannot open2 FIFO");
 			exit(1);
@@ -97,7 +97,7 @@ int main(int argc, char** argv)
 			//cerr<<" detected control Z PID="<<buf<<endl;
 		
 		}
-		else
+		else*/
 		{
 			if(my_state==2)exit(-1);	//exit from the previous Child process
 			

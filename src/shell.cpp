@@ -81,10 +81,10 @@ void prompt(string &input)   //get user info ... DONE
 	string tempcwd(cpath);
 	string thome(pHome);
 	replaceHOME(tempcwd, thome, "~");
-    
+
     cout<<tempcwd.c_str();
     printf("%s ", "$");
-    
+
 	my_state=0;			//control C - state 0 -- waiting for input
     getline(cin,input);	//get user input cmd
 }
@@ -174,7 +174,7 @@ void cd_cmd(struct str_direct &r)
 {
 	if(strcmp(r.current_task[r.cmd_start],"cd")==0)
 		{
-				
+
 			//r.current_task[r.cmd_start]=NULL;	//eliminate race condition
 			//cerr<<"Trying to read Dir="<<current_task[cmd_start+1]<<endl;
 			string myhome;
@@ -183,16 +183,16 @@ void cd_cmd(struct str_direct &r)
 			char lpath[1024];
 			//process "cd" or "cd ~"
 			if((r.current_task[r.cmd_start+1]==NULL)||(strcmp(r.current_task[r.cmd_start+1],"~")==0))
-			
+
 			{	//cd without any argument
 				myhome="";
 				msg=getenv("HOME");
 				if(msg==NULL)perror("Error:getlogin");
 				else
 				myhome +=msg;   //home dir
-								
+
 				r.current_task[r.cmd_start+1]=(char *)myhome.c_str();	//updated with usr home path
-				
+
 			}else if(strcmp(r.current_task[r.cmd_start+1],"-")==0)		//process "cd -"
 			{
 				oldpwd="";
@@ -200,29 +200,29 @@ void cd_cmd(struct str_direct &r)
 				if(msg==NULL)perror("Error:getlogin");
 				else
 				oldpwd +=msg;   //previous path
-				
-				
+
+
 				r.current_task[r.cmd_start+1]=(char *)oldpwd.c_str();			//updated with previous path
 			}
-			
+
 			if(getcwd(lpath,1023)<0)perror("Error:getcwd");						//save current path as previous path
-				else if(setenv("OLDPWD",lpath,1)<0)perror("Error:setenv");		//update OLDPWD if available	
+				else if(setenv("OLDPWD",lpath,1)<0)perror("Error:setenv");		//update OLDPWD if available
 			if(chdir(r.current_task[r.cmd_start+1])<0)perror("Error:chdir");	//process chdir()
-				
+
 			//cerr<<"End of cd"<<endl;
 		}
-}	
+}
 void exec_cmd(vector<string>&xwords)
 {
 	vector<string>words;
 	words = check_extra_credit(xwords);
 	struct str_direct r;
-	int fd;
-	char buf[32];
+	//int fd;
+	//char buf[32];
 	int total = words.size();
 	int count = 0;
-	int task, status, pid;
-	int redirect_out;
+	int task, pid;  //status, pid;
+	//int redirect_out;
 //cout<<"exec:"; for(int i=0;i<total;i++)cout<<words[i]<<" ";
 //cout<<endl;
 	for(int i=0;i<total;i++ )
@@ -247,7 +247,7 @@ void exec_cmd(vector<string>&xwords)
 					my_state=2;		//control C	- child process in progress
                     if(task==0)
                     {	//setup task0
-						
+
                         int file_or_pipe=setup_task0(r);
                         //if(file_or_pipe==1)file_or_pipe=2;
                         if(strcmp(r.current_task[r.cmd_start],"ls")==0)
@@ -262,106 +262,60 @@ void exec_cmd(vector<string>&xwords)
                         //		perror("Error:chdir");
                         		exit(0);
 						}
-						else if(strcmp(r.current_task[r.cmd_start],"fg")==0)
-						{
-							if(my_bg_status==20)
+						else if(task==r.task_count)
+						{	    //last subtask
+							redirect_out=setup_task_end(r);
+							if(redirect_out==-1)
 							{
-								my_bg_status=0;
-								raise(SIGCONT);
-								cerr<<"Finishing the background processing..."<<endl;
-								exit(0);
+								perror("No output filename");
+								exit(255);
 							}
-							else
+
+							if(execvp((const char*)r.current_task[r.cmd_start],(char* const*)&r.current_task[r.cmd_start])<0)
+								 perror(r.current_task[r.cmd_start]);
+							exit(-1);
+
+						}// end if task==r.task_count
+						else
+						{		//In Between subtask operation
+
+							redirect_out=setup_task_inBetween(r,task);
+							if(redirect_out==-1)
 							{
-								perror("No forground process");
-								exit(0);
-							}
+								 perror("No output filename");
+								exit(255);
+							 }
+
+							if(execvp(r.current_task[r.cmd_start],(char* const*)&r.current_task[r.cmd_start])<0)
+								 perror(r.current_task[r.cmd_start]);
+							exit(-1);
+
 						}
-						
-						//char buf[32];
-						my_current_pid=getpid();
-						if((fd=open("myfifo",O_WRONLY))==-1)
+					}
+				}//end of for-task-loop
+
+
+						my_state=1;		//control C	--child process is over but wait until i/o pipe finish
+						if(strcmp(r.current_task[r.cmd_start],"cd")==0)
 						{
-							perror("Child cannot open FIFO write");
-							exit(1);
+							cd_cmd(r);
 						}
-						sprintf(buf,"%ld",(long)getpid());
-						int msize=strlen(buf)+1;
-						if(write(fd,buf,msize)!=msize)
-						{
-							cerr<<"Child write to FIFO failed"<<buf<<endl;
-							exit(1);
-						}
-						close(fd);
-						//cerr<<"Current PID="<<my_current_pid<<endl;
-                        if(execvp((const char *)r.current_task[r.cmd_start],(char* const*)&r.current_task[r.cmd_start])<1)
-                            perror(r.current_task[r.cmd_start]);
-                        exit(1);
-                    }
-                    else if(task==r.task_count)
-                    {	    //last subtask
-                        redirect_out=setup_task_end(r);
-                        if(redirect_out==-1)
-                        {
-                            perror("No output filename");
-                            exit(255);
-                        }
+						status=wait_until_all_tasks_over(r);
+						//determine next i=words-task
+						i=process_if_then_else(words,status,i,total);
 
-                        if(execvp((const char*)r.current_task[r.cmd_start],(char* const*)&r.current_task[r.cmd_start])<0)
-                        perror(r.current_task[r.cmd_start]);
-                        exit(-1);
+						count=0;
 
-                    }// end if task==r.task_count
-                    else
-                    {		//In Between subtask operation
 
-                        redirect_out=setup_task_inBetween(r,task);
-                        if(redirect_out==-1)
-                        {
-                            perror("No output filename");
-                            exit(255);
-                        }
-
-                        if(execvp(r.current_task[r.cmd_start],(char* const*)&r.current_task[r.cmd_start])<0)
-                        perror(r.current_task[r.cmd_start]);
-                        exit(-1);
-
-                    }
-                }
-            }//end of for-task-loop
-
-//Parent comes Here
-
-			if((fd=open("myfifo",O_RDONLY|O_NONBLOCK))==-1)
-		{
-			perror("Parent cannot open1 FIFO");
-			exit(1);
-		}
-		//if(read(fd,buf,32)<=0)
-			{
-				//perror("Parent read from FIFO1 failed\n");
-				//exit(1);
+					}
+					else
+					{
+						if(count==0 && words[i]=="exit")exit(0);	//exit from this Program
+						r.cmdlist[count++]=(char *)words[i].c_str();
+					}		
+				}//end of for-total-loo
 			}
-
-		    my_state=1;		//control C	--child process is over but wait until i/o pipe finish
-			if(strcmp(r.current_task[r.cmd_start],"cd")==0)
-				{
-					cd_cmd(r);
-				}
-			status=wait_until_all_tasks_over(r);
-			//determine next i=words-task
-			i=process_if_then_else(words,status,i,total);
-
-			count=0;
-
-
 		}
-		else
-		{
-			if(count==0 && words[i]=="exit")exit(0);	//exit from this Program
-			r.cmdlist[count++]=(char *)words[i].c_str();
-		}
-	}//end of for-total-loo
+	}
 }
-
 #endif // _SHELL_H__
